@@ -24,7 +24,6 @@ import { DAYS_OF_WEEK, DIFFICULTY_POINTS } from "@/lib/constants";
 type SchemeCardProps = {
   appData: AppData;
   onTaskAction: (action: string, payload: any) => void;
-  filteredTasks: WeeklyTasks;
 };
 
 const taskSchema = z.object({
@@ -36,7 +35,7 @@ const taskSchema = z.object({
 
 type TaskFormData = z.infer<typeof taskSchema>;
 
-export function SchemeCard({ appData, onTaskAction, filteredTasks }: SchemeCardProps) {
+export function SchemeCard({ appData, onTaskAction }: SchemeCardProps) {
   const [activeDay, setActiveDay] = useState(DAYS_OF_WEEK[0].toLowerCase());
 
   useEffect(() => {
@@ -107,8 +106,8 @@ export function SchemeCard({ appData, onTaskAction, filteredTasks }: SchemeCardP
             ))}
           </TabsList>
           {DAYS_OF_WEEK.map(day => {
-            const dayKey = day.toLowerCase();
-            const tasksForDay = filteredTasks[dayKey];
+            const dayKey = day.toLowerCase() as keyof WeeklyTasks;
+            const tasksForDay = appData.weeklyTasks[dayKey];
             return (
               <TabsContent key={dayKey} value={dayKey}>
                 <ScrollArea className="h-[300px] pr-4 mt-4">

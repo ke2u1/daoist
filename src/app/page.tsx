@@ -19,7 +19,7 @@ import {
   Sparkles,
   Zap,
 } from "lucide-react";
-import type { AppData, Task, Tribulation } from "@/lib/types";
+import type { AppData, Task, Tribulation, JournalEntry } from "@/lib/types";
 import {
   DEFAULT_APP_DATA,
   DAYS_OF_WEEK,
@@ -41,6 +41,11 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { generateTribulationAction } from "@/app/actions";
+import { SearchResultsCard } from "@/components/dashboard/search-results-card";
+import { AdvisorCard } from "@/components/dashboard/advisor-card";
+import { DaoChart } from "@/components/dashboard/dao-chart";
+import { JournalCard } from "@/components/dashboard/journal-card";
+
 
 const DATA_KEY = "essenceTrackerDataV2";
 
@@ -59,24 +64,24 @@ export default function Home() {
     document.documentElement.classList.add(theme);
   }, [theme]);
 
-  const filteredWeeklyTasks = useCallback(() => {
-    if (!appData) return DEFAULT_APP_DATA.weeklyTasks;
-    if (!searchQuery) return appData.weeklyTasks;
-
+  const filteredTasks = useCallback(() => {
+    if (!appData || !searchQuery) return [];
+    
     const lowerCaseQuery = searchQuery.toLowerCase();
-    const filtered: AppData["weeklyTasks"] = {
-      monday: [], tuesday: [], wednesday: [], thursday: [], friday: [], saturday: [], sunday: [],
-    };
+    const allTasks: (Task & {day: string})[] = [];
 
     for (const day in appData.weeklyTasks) {
-      filtered[day as keyof AppData['weeklyTasks']] = appData.weeklyTasks[day as keyof AppData['weeklyTasks']].filter(
+       appData.weeklyTasks[day as keyof AppData['weeklyTasks']].forEach(task => {
+         allTasks.push({...task, day: day});
+       });
+    }
+
+    return allTasks.filter(
         (task) =>
           task.text.toLowerCase().includes(lowerCaseQuery) ||
           task.benefits.toLowerCase().includes(lowerCaseQuery) ||
           task.subtasks.some(sub => sub.text.toLowerCase().includes(lowerCaseQuery))
       );
-    }
-    return filtered;
   }, [appData, searchQuery]);
 
   const loadData = useCallback(() => {
@@ -90,6 +95,8 @@ export default function Home() {
         validatedData.rewardSystem = { ...DEFAULT_APP_DATA.rewardSystem, ...parsedData.rewardSystem };
         if (!validatedData.stats.dailyProgress) validatedData.stats.dailyProgress = [];
         if (!validatedData.tribulation) validatedData.tribulation = null;
+        if (!validatedData.journalEntries) validatedData.journalEntries = [];
+        if (!validatedData.advisor) validatedData.advisor = null;
         setAppData(validatedData);
       } else {
         setAppData(JSON.parse(JSON.stringify(DEFAULT_APP_DATA)));
@@ -226,23 +233,24 @@ export default function Home() {
 
         let newData = JSON.parse(JSON.stringify(prevData)) as AppData;
         const { day, task, subtaskText } = payload;
+        const dayKeyTyped = day as keyof AppData['weeklyTasks'];
 
         switch (action) {
             case 'add':
-                newData.weeklyTasks[day as keyof WeeklyTasks].push(task);
+                newData.weeklyTasks[dayKeyTyped].push(task);
                 newData.stats.tasksStarted++;
                 break;
             
             case 'addMultiple':
                 payload.tasks.forEach((t: Task) => {
-                    newData.weeklyTasks[payload.day as keyof WeeklyTasks].push(t);
+                    newData.weeklyTasks[dayKeyTyped].push(t);
                     newData.stats.tasksStarted++;
                 });
                 break;
 
             case 'addSubtask':
                 for (const dayKey in newData.weeklyTasks) {
-                    const parentTask = newData.weeklyTasks[dayKey as keyof WeeklyTasks].find(t => t.id === payload.taskId);
+                    const parentTask = newData.weeklyTasks[dayKey as keyof AppData['weeklyTasks']].find(t => t.id === payload.taskId);
                     if (parentTask) {
                         parentTask.subtasks.push({ id: Date.now(), text: subtaskText, completed: false });
                         break;
@@ -253,7 +261,7 @@ export default function Home() {
             case 'toggle':
                 let taskFound = false;
                 for (const dayKey in newData.weeklyTasks) {
-                    for (const t of newData.weeklyTasks[dayKey as keyof WeeklyTasks]) {
+                    for (const t of newData.weeklyTasks[dayKey as keyof AppData['weeklyTasks']]) {
                         if (t.id === payload.taskId) {
                             const wasCompleted = t.completed;
                             t.completed = !t.completed;
@@ -276,9 +284,9 @@ export default function Home() {
             
             case 'update':
                 for (const dayKey in newData.weeklyTasks) {
-                    const taskIndex = newData.weeklyTasks[dayKey as keyof WeeklyTasks].findIndex(t => t.id === payload.task.id);
+                    const taskIndex = newData.weeklyTasks[dayKey as keyof AppData['weeklyTasks']].findIndex(t => t.id === payload.task.id);
                     if (taskIndex !== -1) {
-                        newData.weeklyTasks[dayKey as keyof WeeklyTasks][taskIndex] = payload.task;
+                        newData.weeklyTasks[dayKey as keyof AppData['weeklyTasks']][taskIndex] = payload.task;
                         break;
                     }
                 }
@@ -286,13 +294,13 @@ export default function Home() {
 
             case 'delete':
                 for (const dayKey in newData.weeklyTasks) {
-                    let taskIndex = newData.weeklyTasks[dayKey as keyof WeeklyTasks].findIndex(t => t.id === payload.taskId);
+                    let taskIndex = newData.weeklyTasks[dayKey as keyof AppData['weeklyTasks']].findIndex(t => t.id === payload.taskId);
                     if (taskIndex !== -1) {
-                        newData.weeklyTasks[dayKey as keyof WeeklyTasks].splice(taskIndex, 1);
+                        newData.weeklyTasks[dayKey as keyof AppData['weeklyTasks']].splice(taskIndex, 1);
                         newData.top3TaskIds = newData.top3TaskIds.filter(id => id !== payload.taskId);
                         break;
                     }
-                    for (const t of newData.weeklyTasks[dayKey as keyof WeeklyTasks]) {
+                    for (const t of newData.weeklyTasks[dayKey as keyof AppData['weeklyTasks']]) {
                         const subtaskIndex = t.subtasks.findIndex(s => s.id === payload.taskId);
                         if (subtaskIndex !== -1) {
                             t.subtasks.splice(subtaskIndex, 1);
@@ -318,7 +326,7 @@ export default function Home() {
         newData = checkAchievements(newData);
         return newData;
     });
-}, [checkAchievements, updateStatsOnCompletion, toast]);
+  }, [checkAchievements, updateStatsOnCompletion, toast]);
 
   const handleGenerateNewTribulation = useCallback(async () => {
     if (!appData) return;
@@ -368,7 +376,9 @@ export default function Home() {
       const generatedDate = new Date(appData.tribulation.generatedDate);
       const now = new Date();
       const diffDays = Math.ceil((now.getTime() - generatedDate.getTime()) / (1000 * 60 * 60 * 24));
-      if (diffDays > 7) {
+      if (diffDays > 7 && !appData.tribulation.completed && !appData.tribulation.failed) {
+         handleTribulationOutcome('failed'); // Auto-fail after 7 days
+      } else if (diffDays > 7) {
          handleGenerateNewTribulation();
       }
     }
@@ -422,6 +432,24 @@ export default function Home() {
     }
   }, [appData, toast, checkAchievements]);
 
+   const handleJournalUpdate = useCallback((newEntry: JournalEntry, analysis?: JournalEntry['analysis']) => {
+        setAppData(prevData => {
+            if (!prevData) return null;
+            const existingEntryIndex = prevData.journalEntries.findIndex(e => e.id === newEntry.id);
+            const newEntries = [...prevData.journalEntries];
+            if (existingEntryIndex > -1) {
+                newEntries[existingEntryIndex] = { ...newEntries[existingEntryIndex], ...newEntry, analysis: analysis || newEntries[existingEntryIndex].analysis };
+            } else {
+                newEntries.unshift({ ...newEntry, analysis });
+            }
+            return { ...prevData, journalEntries: newEntries };
+        });
+    }, []);
+
+    const handleAdvisorUpdate = useCallback((newAdvisor: AppData['advisor']) => {
+        setAppData(prevData => prevData ? ({ ...prevData, advisor: newAdvisor }) : null);
+    }, []);
+
   if (!appData) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-background">
@@ -452,6 +480,14 @@ export default function Home() {
             <span className="sr-only">Toggle theme</span>
           </Button>
         </div>
+
+        {searchQuery && (
+          <SearchResultsCard 
+            tasks={filteredTasks()}
+            onTaskAction={handleTaskAction} 
+          />
+        )}
+
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <EditableCard
@@ -515,6 +551,10 @@ export default function Home() {
             />
           </div>
 
+          <div className="lg:col-span-3">
+            <AdvisorCard appData={appData} onUpdate={handleAdvisorUpdate} />
+          </div>
+
           {appData.tribulation && (
             <div className="lg:col-span-3">
               <TribulationCard 
@@ -537,7 +577,13 @@ export default function Home() {
              <LeaderboardCard userPoints={appData.stats.totalPoints} />
           </div>
           <div className="lg:col-span-3">
-            <SchemeCard appData={appData} onTaskAction={handleTaskAction} filteredTasks={filteredWeeklyTasks()} />
+            <DaoChart appData={appData} />
+          </div>
+          <div className="lg:col-span-3">
+            <SchemeCard appData={appData} onTaskAction={handleTaskAction} />
+          </div>
+          <div className="lg:col-span-3">
+            <JournalCard entries={appData.journalEntries} onUpdate={handleJournalUpdate} />
           </div>
           <div className="lg:col-span-3">
              <AchievementsCard achievements={appData.stats.achievements} />

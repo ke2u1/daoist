@@ -98,7 +98,12 @@ export const ACHIEVEMENTS_CONFIG: { [key: string]: { name: string; description: 
     name: "Heaven Defying",
     description: "Survive your first Heavenly Tribulation.",
     condition: (data) => data.tribulation?.completed === true,
-  }
+  },
+   first_journal: {
+    name: "Inner Reflections",
+    description: "Write your first journal entry.",
+    condition: (data) => data.journalEntries.length > 0,
+  },
 };
 
 export const DEFAULT_APP_DATA: AppData = {
@@ -132,4 +137,6 @@ export const DEFAULT_APP_DATA: AppData = {
   },
   rewardSystem: { text: "", goal: 50, progress: 0 },
   tribulation: null,
+  journalEntries: [],
+  advisor: null,
 };

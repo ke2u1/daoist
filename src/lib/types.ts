@@ -53,6 +53,24 @@ export interface Tribulation {
   generatedDate: string;
 }
 
+export interface JournalEntry {
+    id: number;
+    date: string; // ISO string
+    content: string;
+    analysis?: {
+        sentiment: 'positive' | 'negative' | 'neutral';
+        themes: string[];
+    }
+}
+
+export interface AdvisorFeedback {
+    headline: string;
+    praise: string;
+    critique: string;
+    suggestion: string;
+    generatedDate: string; // ISO string
+}
+
 export interface AppData {
   objective: string;
   shortTermGoal: string;
@@ -66,6 +84,8 @@ export interface AppData {
   stats: Stats;
   rewardSystem: RewardSystem;
   tribulation: Tribulation | null;
+  journalEntries: JournalEntry[];
+  advisor: AdvisorFeedback | null;
 }
 
 // AI Schema Types
@@ -106,3 +126,32 @@ export const GenerateTribulationOutputSchema = z.object({
   penalty: z.number().describe("The amount of Primeval Essence lost on failure."),
 });
 export type GenerateTribulationOutput = z.infer<typeof GenerateTribulationOutputSchema>;
+
+export const GenerateAdvisorFeedbackInputSchema = z.object({
+    objective: z.string(),
+    shortTermGoal: z.string(),
+    completedTasks: z.string().describe("Comma-separated list of completed tasks this week."),
+    incompleteTasks: z.string().describe("Comma-separated list of incomplete tasks this week."),
+    pointsGained: z.number(),
+    rank: z.string(),
+});
+export type GenerateAdvisorFeedbackInput = z.infer<typeof GenerateAdvisorFeedbackInputSchema>;
+
+export const GenerateAdvisorFeedbackOutputSchema = z.object({
+    headline: z.string().describe("A short, impactful headline for the advice."),
+    praise: z.string().describe("Acknowledgement of the user's hard work and progress."),
+    critique: z.string().describe("Gentle critique on potential issues or imbalances."),
+    suggestion: z.string().describe("A concrete suggestion for the upcoming week."),
+});
+export type GenerateAdvisorFeedbackOutput = z.infer<typeof GenerateAdvisorFeedbackOutputSchema>;
+
+export const AnalyzeJournalEntryInputSchema = z.object({
+    entry: z.string().describe("The user's journal entry to be analyzed."),
+});
+export type AnalyzeJournalEntryInput = z.infer<typeof AnalyzeJournalEntryInputSchema>;
+
+export const AnalyzeJournalEntryOutputSchema = z.object({
+    sentiment: z.enum(['positive', 'negative', 'neutral']).describe("The overall sentiment of the journal entry."),
+    themes: z.array(z.string()).describe("Up to three key themes or recurring thoughts from the entry."),
+});
+export type AnalyzeJournalEntryOutput = z.infer<typeof AnalyzeJournalEntryOutputSchema>;
