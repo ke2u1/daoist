@@ -28,16 +28,16 @@ const NemesisUpdateOutputSchema = z.object({
 
 const updateNemesisPrompt = ai.definePrompt({
   name: 'updateNemesisPrompt',
-  input: {schema: NemesisSchema },
+  input: {schema: UpdateNemesisInputSchema },
   output: {schema: NemesisUpdateOutputSchema},
   prompt: `You are an AI storyteller in the "DAO OF BENEFITS" app. It is time for a minor update to the user's Nemesis, who is a person on modern-day Earth.
 
 Here is the current state of the Nemesis:
-- Name: {{{name}}}
-- Title: {{{title}}}
-- Rank: {{{rank}}}
-- Points: {{{points}}}
-- Backstory: {{{backstory}}}
+- Name: {{{nemesis.name}}}
+- Title: {{{nemesis.title}}}
+- Rank: {{{nemesis.rank}}}
+- Points: {{{nemesis.points}}}
+- Backstory: {{{nemesis.backstory}}}
 
 A minute has passed. You must describe their progress. You should:
 1.  **Increase their points**: Add a small, realistic amount of Primeval Essence for a minute of activity (e.g., 1-5 points).
@@ -55,7 +55,7 @@ const updateNemesisFlow = ai.defineFlow(
     outputSchema: NemesisSchema,
   },
   async ({ nemesis }) => {
-    const {output} = await updateNemesisPrompt(nemesis);
+    const {output} = await updateNemesisPrompt({ nemesis });
     if (!output) {
         throw new Error("Failed to update nemesis");
     }
