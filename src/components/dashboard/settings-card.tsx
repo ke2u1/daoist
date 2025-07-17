@@ -1,20 +1,23 @@
 "use client";
 
-import { useRef } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useRef, useState } from "react";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Cog, FileDown, FileUp } from "lucide-react";
+import { Cog, FileDown, FileUp, RotateCcw } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import type { AppData } from "@/lib/types";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 
 type SettingsCardProps = {
   appData: AppData;
   onImport: (data: AppData) => void;
+  onReset: () => void;
 };
 
-export function SettingsCard({ appData, onImport }: SettingsCardProps) {
+export function SettingsCard({ appData, onImport, onReset }: SettingsCardProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
+  const [isResetAlertOpen, setIsResetAlertOpen] = useState(false);
 
   const handleExport = () => {
     try {
@@ -48,7 +51,7 @@ export function SettingsCard({ appData, onImport }: SettingsCardProps) {
         const text = e.target?.result;
         if (typeof text !== "string") throw new Error("File is not valid text.");
         const importedData = JSON.parse(text);
-        // Add validation here if needed
+        
         if (window.confirm("This will overwrite all current data. Are you sure?")) {
           onImport(importedData);
           toast({ title: "Import Successful", description: "Your data has been loaded." });
@@ -58,39 +61,59 @@ export function SettingsCard({ appData, onImport }: SettingsCardProps) {
       }
     };
     reader.readAsText(file);
-    // Reset file input
     if (fileInputRef.current) {
         fileInputRef.current.value = "";
     }
   };
 
   return (
-    <Card className="hover:bg-white/5 transition-colors">
+    <Card className="hover:bg-card/95 transition-colors">
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-lg">
           <Cog className="w-5 h-5 text-primary" />
           Settings & Data
         </CardTitle>
+        <CardDescription>
+          Backup your progress, transfer it, or start a new path.
+        </CardDescription>
       </CardHeader>
-      <CardContent>
-        <p className="text-sm text-muted-foreground mb-4">
-          Backup your cultivation progress or transfer it to another vessel.
-        </p>
-        <div className="flex flex-col sm:flex-row gap-4">
-          <Button onClick={handleExport} className="w-full">
-            <FileDown className="mr-2 h-4 w-4" /> Export Data
-          </Button>
-          <Button onClick={handleImportClick} variant="secondary" className="w-full">
-            <FileUp className="mr-2 h-4 w-4" /> Import Data
-          </Button>
-          <input
-            type="file"
-            ref={fileInputRef}
-            className="hidden"
-            accept=".json"
-            onChange={handleFileChange}
-          />
-        </div>
+      <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <Button onClick={handleExport} className="w-full">
+          <FileDown className="mr-2 h-4 w-4" /> Export Data
+        </Button>
+        <Button onClick={handleImportClick} variant="secondary" className="w-full">
+          <FileUp className="mr-2 h-4 w-4" /> Import Data
+        </Button>
+
+        <AlertDialog open={isResetAlertOpen} onOpenChange={setIsResetAlertOpen}>
+          <AlertDialogTrigger asChild>
+            <Button variant="destructive" className="w-full">
+              <RotateCcw className="mr-2 h-4 w-4" /> Reset Progress
+            </Button>
+          </AlertDialogTrigger>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+              <AlertDialogDescription>
+                This action is irreversible. All of your cultivation progress, schemes, and essence will be permanently erased. A new journey will begin.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction onClick={onReset}>
+                Yes, erase my legend
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+
+        <input
+          type="file"
+          ref={fileInputRef}
+          className="hidden"
+          accept=".json"
+          onChange={handleFileChange}
+        />
       </CardContent>
     </Card>
   );

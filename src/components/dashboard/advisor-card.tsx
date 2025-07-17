@@ -66,7 +66,7 @@ export function AdvisorCard({ appData, onUpdate }: AdvisorCardProps) {
   }, [advisor, handleGenerateFeedback]);
 
   return (
-    <Card className="bg-primary/5 border-primary/20 hover:bg-primary/10 transition-colors">
+    <Card className="bg-card border-border hover:bg-card/95 transition-colors">
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-primary">
           <BrainCircuit className="w-5 h-5" />

@@ -16,6 +16,7 @@ import {
   Search,
   Moon,
   Sun,
+  LayoutGrid
 } from "lucide-react";
 import type { AppData, Task, Tribulation, JournalEntry } from "@/lib/types";
 import {
@@ -478,6 +479,15 @@ export default function Home() {
         setAppData(prevData => prevData ? ({ ...prevData, nemesis: newNemesis }) : null);
     }, []);
 
+    const handleResetData = () => {
+      localStorage.removeItem(DATA_KEY);
+      setAppData(JSON.parse(JSON.stringify(DEFAULT_APP_DATA)));
+      toast({
+        title: "Progress Reset",
+        description: "Your cultivation journey has begun anew."
+      });
+    }
+
 
     // Effect to manage nemesis generation and updates
     useEffect(() => {
@@ -531,23 +541,23 @@ export default function Home() {
   }
 
   return (
-    <main className="container mx-auto p-4 md:p-8">
+    <main className="container mx-auto p-4 sm:p-6 md:p-8">
       <div className="flex flex-col gap-8">
         <AppHeader />
 
-        <div className="flex flex-col sm:flex-row gap-4 items-center">
+        <div className="sticky top-4 z-10 flex flex-col sm:flex-row gap-4 items-center bg-background/80 backdrop-blur-sm p-4 -m-4 rounded-lg border">
           <div className="relative w-full">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
             <Input
               type="text"
               placeholder="Search schemes..."
-              className="pl-10"
+              className="pl-10 h-11 text-base"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               spellCheck="false"
             />
           </div>
-          <Button onClick={toggleTheme} variant="outline" size="icon">
+          <Button onClick={toggleTheme} variant="outline" size="icon" className="h-11 w-11 flex-shrink-0">
             <Sun className="h-[1.2rem] w-[1.2rem] rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
             <Moon className="absolute h-[1.2rem] w-[1.2rem] rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
             <span className="sr-only">Toggle theme</span>
@@ -561,132 +571,105 @@ export default function Home() {
           />
         )}
 
-
+        {/* Core Info Section */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           <EditableCard
             id="objective"
             title="My Grand Scheme"
             icon={<Target className="w-5 h-5 text-primary" />}
             content={appData.objective}
-            placeholder="What is your ultimate goal? The Immortal Venerable throne?"
+            placeholder="What is your ultimate goal?"
             onUpdate={handleUpdateEditable}
+            className="lg:col-span-2"
           />
           <EditableCard
             id="shortTermGoal"
-            title="Short-Term Goal"
+            title="Current Objective"
             icon={<Calendar className="w-5 h-5 text-primary" />}
             content={appData.shortTermGoal}
-            placeholder="What is the next major step in your scheme?"
+            placeholder="What is the next major step?"
             onUpdate={handleUpdateEditable}
+            className="lg:col-span-2"
           />
           <EditableCard
             id="motivation"
-            title="Foundation of the Dao Heart"
+            title="Dao Heart"
             icon={<Heart className="w-5 h-5 text-primary" />}
             content={appData.motivation}
-            placeholder="What strengthens your will to persevere?"
+            placeholder="What strengthens your will?"
             onUpdate={handleUpdateEditable}
+            className="lg:col-span-2"
           />
           <EditableCard
             id="distractions"
-            title="Inner Demons & Worldly Obstacles"
+            title="Inner Demons"
             icon={<Skull className="w-5 h-5 text-primary" />}
             content={appData.distractions}
-            placeholder="What attachments and enemies must be purged?"
+            placeholder="What obstacles must be purged?"
             onUpdate={handleUpdateEditable}
-          />
-          <EditableCard
-            id="todaysGoal"
-            title="Today's Goal"
-            icon={<BookOpen className="w-5 h-5 text-primary" />}
-            content={appData.todaysGoal}
-            placeholder="What is the single most important objective for today?"
-            onUpdate={handleUpdateEditable}
-            className="md:col-span-2"
-          />
-          <EditableCard
-            id="weeklyGoal"
-            title="Weekly Goal"
-            icon={<BookOpen className="w-5 h-5 text-primary" />}
-            content={appData.weeklyGoal}
-            placeholder="What key objective must be accomplished this week?"
-            onUpdate={handleUpdateEditable}
-            className="md:col-span-2"
+            className="lg:col-span-2"
           />
         </div>
-        
+
+        {/* Dashboard Section */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-3">
-            <FocusCard 
-              taskIds={appData.top3TaskIds}
-              allTasks={appData.weeklyTasks}
-              onTaskAction={handleTaskAction}
-            />
-          </div>
-
-          <div className="lg:col-span-3">
-            <AdvisorCard appData={appData} onUpdate={handleAdvisorUpdate} />
-          </div>
-
-          {appData.nemesis && (
             <div className="lg:col-span-3">
-                <NemesisCard nemesis={appData.nemesis} />
-            </div>
-          )}
-
-          {appData.tribulation && (
-            <div className="lg:col-span-3">
-              <TribulationCard 
-                tribulation={appData.tribulation} 
-                onOutcome={handleTribulationOutcome}
-                onGenerateNew={handleGenerateNewTribulation}
+              <FocusCard 
+                taskIds={appData.top3TaskIds}
+                allTasks={appData.weeklyTasks}
+                onTaskAction={handleTaskAction}
               />
             </div>
-          )}
+            
+            <ProgressDashboard stats={appData.stats} onWasteEssence={handleWasteEssence} />
+            <ApertureCard stats={appData.stats} />
+            <RewardCard 
+                rewardSystem={appData.rewardSystem} 
+                onUpdate={handleRewardSystemUpdate} 
+                onClaim={handleClaimReward}
+            />
 
-          <div className="lg:col-span-3 grid grid-cols-1 md:grid-cols-3 gap-6">
-             <div className="md:col-span-1">
-                <ApertureCard stats={appData.stats} />
-             </div>
-             <div className="md:col-span-1">
-                <ProgressDashboard stats={appData.stats} onWasteEssence={handleWasteEssence} />
-             </div>
-             <div className="md:col-span-1">
-                <RewardCard 
-                   rewardSystem={appData.rewardSystem} 
-                   onUpdate={handleRewardSystemUpdate} 
-                   onClaim={handleClaimReward}
-                 />
-             </div>
-          </div>
-           <div className="lg:col-span-3">
-             <LeaderboardCard userPoints={appData.stats.totalPoints} nemesis={appData.nemesis}/>
-          </div>
-          <div className="lg:col-span-3">
-            <DaoChart appData={appData} />
-          </div>
-          <div className="lg:col-span-3">
-            <SchemeCard appData={appData} onTaskAction={handleTaskAction} />
-          </div>
-          <div className="lg:col-span-3">
-            <JournalCard entries={appData.journalEntries} onUpdate={handleJournalUpdate} />
-          </div>
-          <div className="lg:col-span-3">
-             <AchievementsCard achievements={appData.stats.achievements} />
-          </div>
-           <EditableCard
-            id="sacrifice"
-            title="Tribulation & Sacrifice"
-            icon={<Sword className="w-5 h-5 text-primary" />}
-            content={appData.sacrifice}
-            placeholder="What tribulations will you endure? What worldly ties will you sever?"
-            onUpdate={handleUpdateEditable}
-            className="lg:col-span-3"
-          />
-          <div className="lg:col-span-3">
-            <SettingsCard appData={appData} onImport={setAppData} />
-          </div>
+            {appData.nemesis && (
+              <div className="lg:col-span-3">
+                  <NemesisCard nemesis={appData.nemesis} />
+              </div>
+            )}
+            
+            <div className="lg:col-span-3">
+              <LeaderboardCard userPoints={appData.stats.totalPoints} nemesis={appData.nemesis}/>
+            </div>
+
+            {appData.tribulation && (
+              <div className="lg:col-span-3">
+                <TribulationCard 
+                  tribulation={appData.tribulation} 
+                  onOutcome={handleTribulationOutcome}
+                  onGenerateNew={handleGenerateNewTribulation}
+                />
+              </div>
+            )}
         </div>
+
+        {/* Schemes and Planning */}
+        <div className="grid grid-cols-1 gap-6">
+          <SchemeCard appData={appData} onTaskAction={handleTaskAction} />
+        </div>
+
+        {/* AI & Insights Section */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="lg:col-span-2">
+                <AdvisorCard appData={appData} onUpdate={handleAdvisorUpdate} />
+            </div>
+            <DaoChart appData={appData} />
+            <JournalCard entries={appData.journalEntries} onUpdate={handleJournalUpdate} />
+        </div>
+        
+        {/* Achievements & Settings */}
+        <div className="grid grid-cols-1 gap-6">
+            <AchievementsCard achievements={appData.stats.achievements} />
+            <SettingsCard appData={appData} onImport={setAppData} onReset={handleResetData} />
+        </div>
+
       </div>
     </main>
   );

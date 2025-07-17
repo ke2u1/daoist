@@ -13,7 +13,7 @@ type FocusCardProps = {
 
 const findTaskById = (id: number, allTasks: WeeklyTasks): Task | null => {
   for (const dayKey in allTasks) {
-    const task = allTasks[dayKey].find(t => t.id === id);
+    const task = allTasks[dayKey as keyof WeeklyTasks].find(t => t.id === id);
     if (task) return task;
   }
   return null;
@@ -23,11 +23,11 @@ export function FocusCard({ taskIds, allTasks, onTaskAction }: FocusCardProps) {
   const focusedTasks = taskIds.map(id => findTaskById(id, allTasks)).filter(Boolean) as Task[];
 
   return (
-    <Card className="hover:bg-white/5 transition-colors">
+    <Card className="hover:bg-card/95 transition-colors border-primary/20 bg-primary/5">
       <CardHeader>
-        <CardTitle className="flex items-center gap-2 text-lg">
-          <Star className="w-5 h-5 text-primary" />
-          Today's Focus (Top 3)
+        <CardTitle className="flex items-center gap-2 text-lg text-primary">
+          <Star className="w-5 h-5" />
+          Today's Focus
         </CardTitle>
       </CardHeader>
       <CardContent>
@@ -38,12 +38,12 @@ export function FocusCard({ taskIds, allTasks, onTaskAction }: FocusCardProps) {
         ) : (
           <ul className="space-y-2">
             {focusedTasks.map(task => (
-              <li key={task.id} className="flex items-center gap-2 p-2 rounded-md bg-card-foreground/5 border hover:bg-card-foreground/10 transition-colors">
+              <li key={task.id} className="flex items-center gap-2 p-2 rounded-md bg-card/50 border hover:bg-card transition-colors">
                 <div
-                  className={`w-5 h-5 rounded-full border-2 cursor-pointer flex-shrink-0 ${
+                  className={`w-5 h-5 rounded-full border-2 cursor-pointer flex-shrink-0 transition-all ${
                     task.completed
                       ? 'bg-accent border-accent'
-                      : 'border-muted-foreground'
+                      : 'border-muted-foreground hover:border-primary'
                   }`}
                   onClick={() => onTaskAction('toggle', { taskId: task.id })}
                 >
