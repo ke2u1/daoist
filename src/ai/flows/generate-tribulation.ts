@@ -10,22 +10,7 @@
  */
 
 import {ai} from '@/ai/genkit';
-import {z} from 'genkit';
-
-export const GenerateTribulationInputSchema = z.object({
-  rank: z.string().describe("The user's current cultivation rank."),
-  recentAchievements: z.string().describe('A comma-separated list of recent achievements.'),
-  objective: z.string().describe("The user's ultimate long-term goal."),
-});
-export type GenerateTribulationInput = z.infer<typeof GenerateTribulationInputSchema>;
-
-export const GenerateTribulationOutputSchema = z.object({
-  title: z.string().describe("The name of the tribulation (e.g., 'The Trial of the Shattered Dao Heart')."),
-  description: z.string().describe("A thematic description of the challenge, what the user must do to overcome it."),
-  reward: z.number().describe("The amount of Primeval Essence rewarded for success."),
-  penalty: z.number().describe("The amount of Primeval Essence lost on failure."),
-});
-export type GenerateTribulationOutput = z.infer<typeof GenerateTribulationOutputSchema>;
+import { GenerateTribulationInputSchema, GenerateTribulationOutputSchema, type GenerateTribulationInput, type GenerateTribulationOutput } from '@/lib/types';
 
 
 export async function generateWeeklyTribulation(

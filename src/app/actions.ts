@@ -2,8 +2,8 @@
 
 import { refineTaskBenefits, type RefineTaskBenefitsInput, type RefineTaskBenefitsOutput } from "@/ai/flows/refine-task-benefits";
 import { generateSchemesForGoal } from "@/ai/flows/generate-schemes";
-import { generateWeeklyTribulation, type GenerateTribulationInput, type GenerateTribulationOutput } from "@/ai/flows/generate-tribulation";
-import type { GenerateSchemesInput, GenerateSchemesOutput } from "@/lib/types";
+import { generateWeeklyTribulation } from "@/ai/flows/generate-tribulation";
+import type { GenerateSchemesInput, GenerateSchemesOutput, GenerateTribulationInput, GenerateTribulationOutput } from "@/lib/types";
 
 export async function refineTaskBenefitsAction(input: RefineTaskBenefitsInput): Promise<RefineTaskBenefitsOutput> {
     try {

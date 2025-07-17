@@ -90,3 +90,19 @@ export const GenerateSchemesOutputSchema = z.object({
   schemes: z.array(GeneratedTaskSchema).describe('A list of 3 to 5 generated schemes to help the user achieve their goal.'),
 });
 export type GenerateSchemesOutput = z.infer<typeof GenerateSchemesOutputSchema>;
+
+
+export const GenerateTribulationInputSchema = z.object({
+  rank: z.string().describe("The user's current cultivation rank."),
+  recentAchievements: z.string().describe('A comma-separated list of recent achievements.'),
+  objective: z.string().describe("The user's ultimate long-term goal."),
+});
+export type GenerateTribulationInput = z.infer<typeof GenerateTribulationInputSchema>;
+
+export const GenerateTribulationOutputSchema = z.object({
+  title: z.string().describe("The name of the tribulation (e.g., 'The Trial of the Shattered Dao Heart')."),
+  description: z.string().describe("A thematic description of the challenge, what the user must do to overcome it."),
+  reward: z.number().describe("The amount of Primeval Essence rewarded for success."),
+  penalty: z.number().describe("The amount of Primeval Essence lost on failure."),
+});
+export type GenerateTribulationOutput = z.infer<typeof GenerateTribulationOutputSchema>;
