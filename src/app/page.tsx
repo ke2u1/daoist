@@ -19,7 +19,7 @@ import {
   Sun,
   LayoutGrid
 } from "lucide-react";
-import type { AppData, Task, Tribulation, JournalEntry, Nemesis } from "@/lib/types";
+import type { AppData, Task, Tribulation, JournalEntry, Nemesis, Milestone } from "@/lib/types";
 import {
   DEFAULT_APP_DATA,
   DAYS_OF_WEEK,
@@ -49,6 +49,8 @@ import { NemesisCard } from "@/components/dashboard/nemesis-card";
 import { ApertureCard } from "@/components/dashboard/aperture-card";
 import { CustomizeNemesisDialog } from "@/components/dashboard/customize-nemesis-dialog";
 import { EditNemesisDialog } from "@/components/dashboard/edit-nemesis-dialog";
+import { HistoryCard } from "@/components/dashboard/history-card";
+import { MindPalaceCard } from "@/components/dashboard/mind-palace-card";
 
 
 const DATA_KEY = "essenceTrackerDataV2";
@@ -106,6 +108,8 @@ export default function Home() {
         if (typeof validatedData.nemesis === 'object' && validatedData.nemesis !== null && !Array.isArray(validatedData.nemesis)) {
            validatedData.nemesis = [validatedData.nemesis]; // Convert old single nemesis to array
         }
+        if (!validatedData.milestones) validatedData.milestones = [];
+        if (!validatedData.mindPalace) validatedData.mindPalace = { imageUrl: null, lastGenerated: null };
 
 
         // Reset daily essence if it's a new day
@@ -160,6 +164,19 @@ export default function Home() {
     }
   };
 
+  const addMilestone = (milestone: Omit<Milestone, 'id' | 'date'>) => {
+    const newMilestone: Milestone = {
+      ...milestone,
+      id: Date.now(),
+      date: new Date().toISOString(),
+    };
+    setAppData(prevData => {
+        if (!prevData) return null;
+        const newMilestones = [newMilestone, ...prevData.milestones];
+        return { ...prevData, milestones: newMilestones };
+    });
+  };
+
   const checkAchievements = useCallback((currentData: AppData): AppData => {
     const unlockedAchievements: string[] = [];
     for (const key in ACHIEVEMENTS_CONFIG) {
@@ -184,10 +201,16 @@ export default function Home() {
       const { totalPoints } = currentData.stats;
       const currentRank = [...RANKS].reverse().find(r => totalPoints >= r.points);
       if (currentRank && currentData.stats.rank !== currentRank.name) {
+          const oldRank = currentData.stats.rank;
           currentData.stats.rank = currentRank.name;
           toast({
               title: "🔥 Rank Up!",
               description: `You have achieved the rank of ${currentRank.name}.`,
+          });
+          addMilestone({
+              type: 'RANK_UP',
+              title: 'Advanced to ' + currentRank.name,
+              description: `You have surpassed the rank of ${oldRank} and achieved the status of ${currentRank.name}.`
           });
       }
       return currentData;
@@ -388,10 +411,20 @@ export default function Home() {
             tribulation.completed = true;
             newData.stats.totalPoints += tribulation.reward;
             toast({ title: "✨ Tribulation Survived!", description: `You have earned ${tribulation.reward} Primeval Essence!` });
+            addMilestone({
+                type: 'TRIBULATION_COMPLETE',
+                title: 'Survived Tribulation: ' + tribulation.title,
+                description: `You faced the heavens and emerged victorious, earning ${tribulation.reward} PE.`
+            });
         } else {
             tribulation.failed = true;
             newData.stats.totalPoints = Math.max(0, newData.stats.totalPoints - tribulation.penalty);
             toast({ variant: "destructive", title: "💔 Tribulation Failed", description: `You have lost ${tribulation.penalty} Primeval Essence.` });
+            addMilestone({
+                type: 'TRIBULATION_FAILED',
+                title: 'Failed Tribulation: ' + tribulation.title,
+                description: `You faltered before the heavens, losing ${tribulation.penalty} PE.`
+            });
         }
         
         newData = checkRank(newData);
@@ -457,6 +490,13 @@ export default function Home() {
       setAppData(prevData => {
         if (!prevData) return null;
         let newData = JSON.parse(JSON.stringify(prevData)) as AppData;
+        
+        addMilestone({
+            type: 'REWARD_CLAIMED',
+            title: 'Refined ' + (newData.rewardSystem.text || 'a Mysterious Gu'),
+            description: `You successfully refined a new Gu after accumulating ${newData.rewardSystem.goal} PE.`
+        });
+        
         newData.rewardSystem.progress = 0;
         newData.stats.rewardsClaimed++;
         newData = checkAchievements(newData);
@@ -474,6 +514,11 @@ export default function Home() {
                 newEntries[existingEntryIndex] = { ...newEntries[existingEntryIndex], ...newEntry, analysis: analysis || newEntries[existingEntryIndex].analysis };
             } else {
                 newEntries.unshift({ ...newEntry, analysis });
+                addMilestone({
+                    type: 'JOURNAL_ENTRY',
+                    title: 'Wrote a Journal Entry',
+                    description: 'Recorded thoughts and reflections on the path of cultivation.'
+                });
             }
             return { ...prevData, journalEntries: newEntries };
         });
@@ -498,6 +543,11 @@ export default function Home() {
     const handleAddNemesis = useCallback((newNemesis: Nemesis) => {
       setAppData(prevData => {
           if (!prevData) return null;
+          addMilestone({
+              type: 'NEMESIS_GENERATED',
+              title: 'A Rival Emerges: ' + newNemesis.name,
+              description: `A new fated rival, "${newNemesis.title}", has appeared on your path.`
+          });
           return { ...prevData, nemesis: [...prevData.nemesis, newNemesis] };
       });
     }, []);
@@ -509,6 +559,10 @@ export default function Home() {
           return { ...prevData, nemesis: newNemesisList };
       });
     }, []);
+
+    const handleMindPalaceUpdate = (mindPalace: AppData['mindPalace']) => {
+        setAppData(prevData => prevData ? ({ ...prevData, mindPalace }) : null);
+    };
 
     const handleResetData = () => {
       localStorage.removeItem(DATA_KEY);
@@ -709,6 +763,12 @@ export default function Home() {
                 />
               </div>
             )}
+        </div>
+        
+        {/* New Features Section */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <MindPalaceCard appData={appData} onUpdate={handleMindPalaceUpdate} />
+            <HistoryCard milestones={appData.milestones} />
         </div>
 
         {/* Schemes and Planning */}

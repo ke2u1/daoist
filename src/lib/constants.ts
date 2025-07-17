@@ -144,4 +144,9 @@ export const DEFAULT_APP_DATA: AppData = {
   journalEntries: [],
   advisor: null,
   nemesis: [],
+  milestones: [],
+  mindPalace: {
+      imageUrl: null,
+      lastGenerated: null,
+  }
 };

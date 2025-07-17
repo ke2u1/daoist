@@ -8,8 +8,9 @@ import { analyzeJournalEntry } from "@/ai/flows/analyze-journal-entry";
 import { generateNemesis } from "@/ai/flows/generate-nemesis";
 import { updateNemesis } from "@/ai/flows/update-nemesis";
 import { customizeNemesis } from "@/ai/flows/customize-nemesis";
+import { generateMindPalaceImage } from "@/ai/flows/generate-mind-palace-image";
 
-import type { GenerateSchemesInput, GenerateSchemesOutput, GenerateTribulationInput, GenerateTribulationOutput, GenerateAdvisorFeedbackInput, GenerateAdvisorFeedbackOutput, AnalyzeJournalEntryInput, AnalyzeJournalEntryOutput, GenerateNemesisInput, GenerateNemesisOutput, UpdateNemesisInput, UpdateNemesisOutput, CustomizeNemesisInput, CustomizeNemesisOutput } from "@/lib/types";
+import type { GenerateSchemesInput, GenerateSchemesOutput, GenerateTribulationInput, GenerateTribulationOutput, GenerateAdvisorFeedbackInput, GenerateAdvisorFeedbackOutput, AnalyzeJournalEntryInput, AnalyzeJournalEntryOutput, GenerateNemesisInput, GenerateNemesisOutput, UpdateNemesisInput, UpdateNemesisOutput, CustomizeNemesisInput, CustomizeNemesisOutput, GenerateMindPalaceImageInput, GenerateMindPalaceImageOutput } from "@/lib/types";
 
 export async function refineTaskBenefitsAction(input: RefineTaskBenefitsInput): Promise<RefineTaskBenefitsOutput> {
     try {
@@ -66,8 +67,7 @@ export async function generateNemesisAction(input: GenerateNemesisInput): Promis
         const result = await generateNemesis(input);
         return result;
     } catch (error) {
-        console.error("Error generating nemesis:", error);
-        throw new Error("Failed to generate nemesis from AI.");
+        console.error("Error generating nemesis from AI.");
     }
 }
 
@@ -88,5 +88,16 @@ export async function customizeNemesisAction(input: CustomizeNemesisInput): Prom
     } catch (error) {
         console.error("Error customizing nemesis:", error);
         throw new Error("Failed to customize nemesis from AI.");
+    }
+}
+
+
+export async function generateMindPalaceImageAction(input: GenerateMindPalaceImageInput): Promise<GenerateMindPalaceImageOutput> {
+    try {
+        const result = await generateMindPalaceImage(input);
+        return result;
+    } catch (error) {
+        console.error("Error generating mind palace image:", error);
+        throw new Error("Failed to generate mind palace image from AI.");
     }
 }

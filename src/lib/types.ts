@@ -87,6 +87,19 @@ export const NemesisSchema = z.object({
 });
 export type Nemesis = z.infer<typeof NemesisSchema>;
 
+export interface Milestone {
+  id: number;
+  date: string; // ISO string
+  type: 'RANK_UP' | 'TRIBULATION_COMPLETE' | 'TRIBULATION_FAILED' | 'REWARD_CLAIMED' | 'NEMESIS_GENERATED' | 'JOURNAL_ENTRY';
+  title: string;
+  description: string;
+}
+
+export interface MindPalace {
+    imageUrl: string | null;
+    lastGenerated: string | null; // ISO string
+}
+
 export interface AppData {
   objective: string;
   shortTermGoal: string;
@@ -103,6 +116,8 @@ export interface AppData {
   journalEntries: JournalEntry[];
   advisor: AdvisorFeedback | null;
   nemesis: Nemesis[];
+  milestones: Milestone[];
+  mindPalace: MindPalace;
 }
 
 // AI Schema Types
@@ -196,3 +211,18 @@ export const CustomizeNemesisInputSchema = z.object({
 });
 export type CustomizeNemesisInput = z.infer<typeof CustomizeNemesisInputSchema>;
 export type CustomizeNemesisOutput = z.infer<typeof NemesisSchema>;
+
+// Mind Palace Schema
+export const GenerateMindPalaceImageInputSchema = z.object({
+    objective: z.string().describe("The user's ultimate long-term goal."),
+    shortTermGoal: z.string().describe("The user's current short-term focus."),
+    motivation: z.string().describe("The user's core motivation or 'Dao Heart'."),
+    distractions: z.string().describe("The user's inner demons or primary obstacles."),
+    recentMilestones: z.string().describe("A summary of recent achievements or key events."),
+});
+export type GenerateMindPalaceImageInput = z.infer<typeof GenerateMindPalaceImageInputSchema>;
+
+export const GenerateMindPalaceImageOutputSchema = z.object({
+    imageUrl: z.string().url().describe("The data URI of the generated image."),
+});
+export type GenerateMindPalaceImageOutput = z.infer<typeof GenerateMindPalaceImageOutputSchema>;

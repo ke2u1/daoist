@@ -9,3 +9,4 @@ import '@/ai/flows/analyze-journal-entry.ts';
 import '@/ai/flows/generate-nemesis.ts';
 import '@/ai/flows/update-nemesis.ts';
 import '@/ai/flows/customize-nemesis.ts';
+import '@/ai/flows/generate-mind-palace-image.ts';
