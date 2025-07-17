@@ -21,7 +21,7 @@ export async function updateNemesis(input: UpdateNemesisInput): Promise<UpdateNe
 const updateNemesisPrompt = ai.definePrompt({
   name: 'updateNemesisPrompt',
   input: {schema: NemesisSchema },
-  output: {schema: NemesisSchema.omit({ id: true })},
+  output: {schema: NemesisSchema.omit({ id: true, lastUpdated: true })},
   prompt: `You are an AI storyteller in the "DAO OF BENEFITS" app. It is time to update the user's Nemesis. The Nemesis is a person from modern-day Earth.
 
 Here is the current state of the Nemesis:
@@ -36,7 +36,6 @@ A week has passed. You must describe their progress. You should:
 2.  **Update their rank**: If their new point total qualifies them for a higher rank, update their rank accordingly.
 3.  **Update their lastAction**: Write a new sentence describing a recent, impressive, real-world feat or activity. It should sound plausible and create a sense of urgency for the user (e.g., "finalized a major client deal," "was featured in a tech journal," "shipped a new product update").
 4.  Keep the name, title, and backstory the same.
-5.  Update the 'lastUpdated' field to the current ISO date.
 
 Do not dramatically change the nemesis, just show their steady progress.
 `,
@@ -45,10 +44,10 @@ Do not dramatically change the nemesis, just show their steady progress.
 const updateNemesisFlow = ai.defineFlow(
   {
     name: 'updateNemesisFlow',
-    inputSchema: UpdateNemesisInputSchema,
+    inputSchema: NemesisSchema,
     outputSchema: NemesisSchema,
   },
-  async ({nemesis}) => {
+  async (nemesis) => {
     const {output} = await updateNemesisPrompt(nemesis);
     if (!output) {
         throw new Error("Failed to update nemesis");
