@@ -21,7 +21,7 @@ const updateNemesisPrompt = ai.definePrompt({
   name: 'updateNemesisPrompt',
   input: {schema: UpdateNemesisInputSchema},
   output: {schema: NemesisSchema},
-  prompt: `You are an AI storyteller in the "DAO OF BENEFITS" app. It is time to update the user's Nemesis.
+  prompt: `You are an AI storyteller in the "DAO OF BENEFITS" app. It is time to update the user's Nemesis. The Nemesis is a person from modern-day Earth.
 
 Here is the current state of the Nemesis:
 - Name: {{{nemesis.name}}}
@@ -33,7 +33,7 @@ Here is the current state of the Nemesis:
 A week has passed. You must describe their progress. You should:
 1.  **Increase their points**: Add a realistic amount of Primeval Essence for a week of cultivation (e.g., 50-200 points, depending on their rank).
 2.  **Update their rank**: If their new point total qualifies them for a higher rank, update their rank accordingly.
-3.  **Update their lastAction**: Write a new sentence describing a recent, impressive feat or activity. It should create a sense of urgency for the user.
+3.  **Update their lastAction**: Write a new sentence describing a recent, impressive, real-world feat or activity. It should sound plausible and create a sense of urgency for the user (e.g., "finalized a major client deal," "was featured in a tech journal," "shipped a new product update").
 4.  Keep the name, title, and backstory the same.
 5.  Update the 'lastUpdated' field to the current ISO date.
 

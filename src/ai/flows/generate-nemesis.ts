@@ -32,8 +32,8 @@ You must create a compelling Nemesis for them. The Nemesis is also a person from
 
 Generate the following:
 
-1.  **name**: A plausible real-world name (e.g., "Alex Chen", "Jessica Rodriguez"). Do NOT use fantasy names like "Shadow Sovereign".
-2.  **title**: A modern, impressive-sounding title related to their goals, which should be similar or in opposition to the user's goals (e.g., 'The Quant King', 'Founder at Zenith Labs', 'Lead Researcher on Project Chimera').
+1.  **name**: A plausible, common, real-world name (e.g., "Alex Chen", "Jessica Rodriguez", "David Smith"). Do NOT use fantasy or overly dramatic names like "Shadow Sovereign" or "Damien Blackwood".
+2.  **title**: A modern, impressive-sounding title related to their goals, which should be similar or in opposition to the user's goals. This should sound like a real job title or accomplishment (e.g., 'Lead Data Scientist', 'Founder at Zenith Labs', 'Lead Researcher on Project Chimera', 'Top Sales Executive'). Do NOT use fantasy titles like 'The Quant King'.
 3.  **rank**: The nemesis's rank. It must be the same as the user's rank: {{{userRank}}}.
 4.  **points**: The nemesis's Primeval Essence (points). This should be a value that is appropriate for their rank, perhaps slightly above the minimum for that rank.
 5.  **backstory**: A short, compelling backstory (1-2 sentences) explaining why this person is the user's rival in the real world. Connect it directly to the user's stated goals. For example, if the user's goal is 'launch a startup', the rival might be 'building a competing product in the same space'. If the user's goal is 'get a promotion', the rival might be 'the other top candidate for the same position'.
