@@ -1,3 +1,4 @@
+
 // customize-nemesis.ts
 'use server';
 
@@ -21,7 +22,7 @@ export async function customizeNemesis(input: CustomizeNemesisInput): Promise<Cu
 const customizeNemesisPrompt = ai.definePrompt({
   name: 'customizeNemesisPrompt',
   input: {schema: CustomizeNemesisInputSchema},
-  output: {schema: NemesisSchema},
+  output: {schema: NemesisSchema.omit({ id: true })},
   prompt: `You are an AI storyteller in the "DAO OF BENEFITS" app. A user wants to create or edit their rival. This is a cultivation-themed app, but the user and their rival are from modern-day Earth, using this system to achieve real-world goals.
 
 The user's context:
@@ -31,7 +32,20 @@ The user's context:
 The user has provided the following details for their rival:
 - Custom Prompt: {{{prompt}}}
 
-Based on ALL of this information (user's context and their custom prompt), you must generate or update the rival.
+{{#if existingNemesis}}
+You are editing an EXISTING rival. Their current details are:
+- Name: {{{existingNemesis.name}}}
+- Title: {{{existingNemesis.title}}}
+- Rank: {{{existingNemesis.rank}}}
+- Points: {{{existingNemesis.points}}}
+- Backstory: {{{existingNemesis.backstory}}}
+
+Use the user's prompt to UPDATE these details. You can change their name, title, or backstory based on the prompt. Keep their rank and points the same unless the prompt implies a change that would affect them. The core identity should be recognizable but evolved based on the user's new input.
+{{else}}
+You are creating a NEW rival from scratch based on the user's prompt.
+{{/if}}
+
+Based on ALL of this information, you must generate or update the rival.
 
 Generate the following:
 
@@ -52,12 +66,19 @@ const customizeNemesisFlow = ai.defineFlow(
     inputSchema: CustomizeNemesisInputSchema,
     outputSchema: NemesisSchema,
   },
-  async input => {
+  async (input) => {
     const {output} = await customizeNemesisPrompt(input);
     if (!output) {
         throw new Error("Failed to generate nemesis");
     }
-    output.lastUpdated = new Date().toISOString();
-    return output;
+    
+    // If we're editing, preserve the original ID. Otherwise, create a new one.
+    const id = input.existingNemesis ? input.existingNemesis.id : Date.now();
+    
+    return {
+        ...output,
+        id: id,
+        lastUpdated: new Date().toISOString(),
+    };
   }
 );

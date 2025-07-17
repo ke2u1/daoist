@@ -1,3 +1,4 @@
+
 // generate-nemesis.ts
 'use server';
 
@@ -20,7 +21,7 @@ export async function generateNemesis(input: GenerateNemesisInput): Promise<Gene
 const generateNemesisPrompt = ai.definePrompt({
   name: 'generateNemesisPrompt',
   input: {schema: GenerateNemesisInputSchema},
-  output: {schema: NemesisSchema},
+  output: {schema: NemesisSchema.omit({ id: true })},
   prompt: `You are an AI storyteller in the "DAO OF BENEFITS" app. A user has progressed far enough to attract the attention of a rival. This is a cultivation-themed app, but the user and their rival are from modern-day Earth, using this system to achieve real-world goals.
 
 The user's context:
@@ -55,7 +56,11 @@ const generateNemesisFlow = ai.defineFlow(
         throw new Error("Failed to generate nemesis");
     }
     // Set the current date for lastUpdated
-    output.lastUpdated = new Date().toISOString();
-    return output;
+    const finalOutput = {
+        ...output,
+        id: Date.now(),
+        lastUpdated: new Date().toISOString()
+    }
+    return finalOutput;
   }
 );

@@ -48,6 +48,7 @@ import { JournalCard } from "@/components/dashboard/journal-card";
 import { NemesisCard } from "@/components/dashboard/nemesis-card";
 import { ApertureCard } from "@/components/dashboard/aperture-card";
 import { CustomizeNemesisDialog } from "@/components/dashboard/customize-nemesis-dialog";
+import { EditNemesisDialog } from "@/components/dashboard/edit-nemesis-dialog";
 
 
 const DATA_KEY = "essenceTrackerDataV2";
@@ -56,6 +57,7 @@ export default function Home() {
   const [appData, setAppData] = useState<AppData | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [theme, setTheme] = useState("dark");
+  const [editingNemesis, setEditingNemesis] = useState<Nemesis | null>(null);
   const { toast } = useToast();
 
   const toggleTheme = () => {
@@ -482,21 +484,29 @@ export default function Home() {
     }, []);
 
     const handleNemesisUpdate = useCallback((updatedNemesis: Nemesis) => {
-        setAppData(prevData => {
-            if (!prevData) return null;
-            const newNemesisList = [...prevData.nemesis];
-            const index = newNemesisList.findIndex(n => n.name === updatedNemesis.name); // Assume name is unique for now
-            if (index !== -1) {
-                newNemesisList[index] = updatedNemesis;
-            }
-            return { ...prevData, nemesis: newNemesisList };
-        });
+      setAppData(prevData => {
+          if (!prevData) return null;
+          const newNemesisList = [...prevData.nemesis];
+          const index = newNemesisList.findIndex(n => n.id === updatedNemesis.id);
+          if (index !== -1) {
+              newNemesisList[index] = updatedNemesis;
+          }
+          return { ...prevData, nemesis: newNemesisList };
+      });
     }, []);
 
     const handleAddNemesis = useCallback((newNemesis: Nemesis) => {
       setAppData(prevData => {
           if (!prevData) return null;
           return { ...prevData, nemesis: [...prevData.nemesis, newNemesis] };
+      });
+    }, []);
+    
+    const handleDeleteNemesis = useCallback((nemesisId: number) => {
+      setAppData(prevData => {
+          if (!prevData) return null;
+          const newNemesisList = prevData.nemesis.filter(n => n.id !== nemesisId);
+          return { ...prevData, nemesis: newNemesisList };
       });
     }, []);
 
@@ -556,7 +566,7 @@ export default function Home() {
                         let changed = false;
                         updatedNemeses.forEach(updatedNemesis => {
                             if (updatedNemesis) {
-                                const index = newNemesisList.findIndex(n => n.name === updatedNemesis.name);
+                                const index = newNemesisList.findIndex(n => n.id === updatedNemesis.id);
                                 if (index !== -1) {
                                     newNemesisList[index] = updatedNemesis;
                                     changed = true;
@@ -575,7 +585,7 @@ export default function Home() {
             });
         };
 
-        const intervalId = setInterval(updateAllNemeses, 5 * 60 * 1000); // 5 minutes
+        const intervalId = setInterval(updateAllNemeses, 60 * 1000); // 1 minute
 
         return () => clearInterval(intervalId);
     }, []);
@@ -681,7 +691,7 @@ export default function Home() {
             {appData.nemesis.length > 0 && (
               <div className="lg:col-span-3 grid grid-cols-1 md:grid-cols-2 gap-6">
                   {appData.nemesis.map((nemesis) => (
-                    <NemesisCard key={nemesis.name} nemesis={nemesis} />
+                    <NemesisCard key={nemesis.id} nemesis={nemesis} onEdit={() => setEditingNemesis(nemesis)} onDelete={() => handleDeleteNemesis(nemesis.id)} />
                   ))}
               </div>
             )}
@@ -721,6 +731,15 @@ export default function Home() {
             <SettingsCard appData={appData} onImport={setAppData} onReset={handleResetData} onAddRival={handleAddNemesis} />
         </div>
 
+        {editingNemesis && appData && (
+          <EditNemesisDialog
+            isOpen={!!editingNemesis}
+            onOpenChange={(isOpen) => { if (!isOpen) setEditingNemesis(null); }}
+            nemesis={editingNemesis}
+            appData={appData}
+            onUpdate={handleNemesisUpdate}
+          />
+        )}
       </div>
     </main>
   );

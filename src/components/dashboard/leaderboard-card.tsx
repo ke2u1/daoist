@@ -17,8 +17,8 @@ export function LeaderboardCard({ userPoints, nemesis }: LeaderboardCardProps) {
   const [showAll, setShowAll] = useState(false);
   
   const allContestants = useMemo(() => {
-    const rivals = nemesis.map(n => ({ name: n.name, points: n.points, isNemesis: true }));
-    const contestants = [...VENERABLES, { name: "You", points: userPoints }, ...rivals];
+    const rivals = nemesis.map(n => ({ name: n.name, points: n.points, isNemesis: true, id: n.id }));
+    const contestants = [...VENERABLES, { name: "You", points: userPoints, id: 0 }, ...rivals];
     return contestants.sort((a, b) => b.points - a.points);
   }, [userPoints, nemesis]);
   
@@ -55,7 +55,7 @@ export function LeaderboardCard({ userPoints, nemesis }: LeaderboardCardProps) {
 
 
              return (
-              <li key={person.name} className={isUser ? "p-2 -m-2 rounded-lg bg-primary/10 border border-primary/50" : isNemesis ? "p-2 -m-2 rounded-lg bg-destructive/10 border border-destructive/50" : ""}>
+              <li key={person.id} className={isUser ? "p-2 -m-2 rounded-lg bg-primary/10 border border-primary/50" : isNemesis ? "p-2 -m-2 rounded-lg bg-destructive/10 border border-destructive/50" : ""}>
                 <div className="flex justify-between items-center mb-1">
                   <span className={`font-semibold ${textClass}`}>{rank}. {person.name}</span>
                   <span className={`text-sm font-semibold ${textClass}`}>{person.points.toLocaleString()} PE</span>
