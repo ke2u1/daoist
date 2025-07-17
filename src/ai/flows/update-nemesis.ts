@@ -20,16 +20,16 @@ export async function updateNemesis(input: UpdateNemesisInput): Promise<UpdateNe
 
 const updateNemesisPrompt = ai.definePrompt({
   name: 'updateNemesisPrompt',
-  input: {schema: UpdateNemesisInputSchema},
+  input: {schema: NemesisSchema },
   output: {schema: NemesisSchema.omit({ id: true })},
   prompt: `You are an AI storyteller in the "DAO OF BENEFITS" app. It is time to update the user's Nemesis. The Nemesis is a person from modern-day Earth.
 
 Here is the current state of the Nemesis:
-- Name: {{{nemesis.name}}}
-- Title: {{{nemesis.title}}}
-- Rank: {{{nemesis.rank}}}
-- Points: {{{nemesis.points}}}
-- Backstory: {{{nemesis.backstory}}}
+- Name: {{{name}}}
+- Title: {{{title}}}
+- Rank: {{{rank}}}
+- Points: {{{points}}}
+- Backstory: {{{backstory}}}
 
 A week has passed. You must describe their progress. You should:
 1.  **Increase their points**: Add a realistic amount of Primeval Essence for a week of cultivation (e.g., 5-20 points, reflecting a smaller time interval).
@@ -49,7 +49,7 @@ const updateNemesisFlow = ai.defineFlow(
     outputSchema: NemesisSchema,
   },
   async ({nemesis}) => {
-    const {output} = await updateNemesisPrompt({ nemesis });
+    const {output} = await updateNemesisPrompt(nemesis);
     if (!output) {
         throw new Error("Failed to update nemesis");
     }
