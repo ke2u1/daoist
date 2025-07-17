@@ -16,7 +16,10 @@ import {
   Search,
   Moon,
   Sun,
-  LayoutGrid
+  LayoutGrid,
+  Users,
+  BrainCircuit,
+  Swords
 } from "lucide-react";
 import { YinYang } from "@/components/icons";
 import type { AppData, Task, Tribulation, JournalEntry, Nemesis, Milestone } from "@/lib/types";
@@ -51,6 +54,7 @@ import { CustomizeNemesisDialog } from "@/components/dashboard/customize-nemesis
 import { EditNemesisDialog } from "@/components/dashboard/edit-nemesis-dialog";
 import { HistoryCard } from "@/components/dashboard/history-card";
 import { MindPalaceCard } from "@/components/dashboard/mind-palace-card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 
 const DATA_KEY = "essenceTrackerDataV2";
@@ -731,66 +735,67 @@ export default function Home() {
           />
         </div>
 
-        {/* Dashboard Section */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <div className="lg:col-span-3">
-              <FocusCard 
-                taskIds={appData.top3TaskIds}
-                allTasks={appData.weeklyTasks}
-                onTaskAction={handleTaskAction}
+        <Tabs defaultValue="cultivation" className="w-full">
+          <TabsList className="grid w-full grid-cols-3">
+            <TabsTrigger value="cultivation">
+              <LayoutGrid className="mr-2" /> Cultivation
+            </TabsTrigger>
+            <TabsTrigger value="world">
+              <Swords className="mr-2" /> World
+            </TabsTrigger>
+            <TabsTrigger value="mind">
+              <BrainCircuit className="mr-2" /> Mind
+            </TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="cultivation" className="mt-6 space-y-6">
+            <FocusCard 
+              taskIds={appData.top3TaskIds}
+              allTasks={appData.weeklyTasks}
+              onTaskAction={handleTaskAction}
+            />
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              <ProgressDashboard stats={appData.stats} onWasteEssence={handleWasteEssence} />
+              <ApertureCard stats={appData.stats} />
+              <RewardCard 
+                  rewardSystem={appData.rewardSystem} 
+                  onUpdate={handleRewardSystemUpdate} 
+                  onClaim={handleClaimReward}
               />
             </div>
-            
-            <ProgressDashboard stats={appData.stats} onWasteEssence={handleWasteEssence} />
-            <ApertureCard stats={appData.stats} />
-            <RewardCard 
-                rewardSystem={appData.rewardSystem} 
-                onUpdate={handleRewardSystemUpdate} 
-                onClaim={handleClaimReward}
-            />
-
+            <SchemeCard appData={appData} onTaskAction={handleTaskAction} />
+          </TabsContent>
+          
+          <TabsContent value="world" className="mt-6 space-y-6">
             {appData.nemesis.length > 0 && (
-              <div className="lg:col-span-3 grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {appData.nemesis.map((nemesis) => (
-                    <NemesisCard key={nemesis.id} nemesis={nemesis} onEdit={() => setEditingNemesis(nemesis)} onDelete={() => handleDeleteNemesis(nemesis.id)} />
-                  ))}
-              </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {appData.nemesis.map((nemesis) => (
+                      <NemesisCard key={nemesis.id} nemesis={nemesis} onEdit={() => setEditingNemesis(nemesis)} onDelete={() => handleDeleteNemesis(nemesis.id)} />
+                    ))}
+                </div>
             )}
-            
-            <div className="lg:col-span-3">
-              <LeaderboardCard userPoints={appData.stats.totalPoints} nemesis={appData.nemesis}/>
-            </div>
-
+            <LeaderboardCard userPoints={appData.stats.totalPoints} nemesis={appData.nemesis}/>
             {appData.tribulation && (
-              <div className="lg:col-span-3">
                 <TribulationCard 
                   tribulation={appData.tribulation} 
                   onOutcome={handleTribulationOutcome}
                   onGenerateNew={handleGenerateNewTribulation}
                 />
-              </div>
             )}
-        </div>
-        
-        {/* New Features Section */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <MindPalaceCard appData={appData} onUpdate={handleMindPalaceUpdate} />
-            <HistoryCard milestones={appData.milestones} />
-        </div>
+          </TabsContent>
 
-        {/* Schemes and Planning */}
-        <div className="grid grid-cols-1 gap-6">
-          <SchemeCard appData={appData} onTaskAction={handleTaskAction} />
-        </div>
-
-        {/* AI & Insights Section */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <div className="lg:col-span-2">
-                <AdvisorCard appData={appData} onUpdate={handleAdvisorUpdate} />
+          <TabsContent value="mind" className="mt-6 space-y-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <MindPalaceCard appData={appData} onUpdate={handleMindPalaceUpdate} />
+              <HistoryCard milestones={appData.milestones} />
             </div>
-            <DaoChart appData={appData} />
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <AdvisorCard appData={appData} onUpdate={handleAdvisorUpdate} />
+              <DaoChart appData={appData} />
+            </div>
             <JournalCard entries={appData.journalEntries} onUpdate={handleJournalUpdate} />
-        </div>
+          </TabsContent>
+        </Tabs>
         
         {/* Achievements & Settings */}
         <div className="grid grid-cols-1 gap-6">
