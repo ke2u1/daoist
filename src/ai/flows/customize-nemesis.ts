@@ -73,7 +73,7 @@ const customizeNemesisFlow = ai.defineFlow(
     }
     
     // If we're editing, preserve the original ID. Otherwise, create a new one.
-    const id = input.existingNemesis ? input.existingNemesis.id : Date.now();
+    const id = input.existingNemesis ? input.existingNemesis.id : Date.now() + Math.random();
     
     return {
         ...output,
