@@ -94,6 +94,11 @@ export const ACHIEVEMENTS_CONFIG: { [key: string]: { name: string; description: 
     description: "Refine your first Gu.",
     condition: (data) => data.stats.rewardsClaimed >= 1,
   },
+  tribulation_survived: {
+    name: "Heaven Defying",
+    description: "Survive your first Heavenly Tribulation.",
+    condition: (data) => data.tribulation?.completed === true,
+  }
 };
 
 export const DEFAULT_APP_DATA: AppData = {
@@ -123,6 +128,8 @@ export const DEFAULT_APP_DATA: AppData = {
     streak: 0,
     lastCompletedDate: null,
     achievements: {},
+    dailyProgress: [],
   },
   rewardSystem: { text: "", goal: 50, progress: 0 },
+  tribulation: null,
 };

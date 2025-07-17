@@ -11,18 +11,20 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Plus, Trash2, Star, BrainCircuit, Info, ChevronDown, ChevronRight, PlusCircle, Calendar } from "lucide-react";
+import { Plus, Trash2, Star, BrainCircuit, Info, ChevronDown, ChevronRight, PlusCircle, Calendar, Sparkles } from "lucide-react";
 import { RefineBenefitsDialog } from "./refine-benefits-dialog";
+import { AISchemeGeneratorDialog } from "./ai-scheme-generator-dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 
 import { cn } from "@/lib/utils";
-import { AppData, Task, SubTask } from "@/lib/types";
+import { AppData, Task, WeeklyTasks } from "@/lib/types";
 import { DAYS_OF_WEEK, DIFFICULTY_POINTS } from "@/lib/constants";
 
 type SchemeCardProps = {
   appData: AppData;
   onTaskAction: (action: string, payload: any) => void;
+  filteredTasks: WeeklyTasks;
 };
 
 const taskSchema = z.object({
@@ -34,7 +36,7 @@ const taskSchema = z.object({
 
 type TaskFormData = z.infer<typeof taskSchema>;
 
-export function SchemeCard({ appData, onTaskAction }: SchemeCardProps) {
+export function SchemeCard({ appData, onTaskAction, filteredTasks }: SchemeCardProps) {
   const [activeDay, setActiveDay] = useState(DAYS_OF_WEEK[0].toLowerCase());
 
   useEffect(() => {
@@ -78,9 +80,19 @@ export function SchemeCard({ appData, onTaskAction }: SchemeCardProps) {
     });
     form.reset();
   };
+  
+  const handleAddMultipleTasks = (tasks: Omit<Task, 'id' | 'completed' | 'subtasks'>[]) => {
+    const newTasks = tasks.map(task => ({
+        ...task,
+        id: Date.now() + Math.random(),
+        completed: false,
+        subtasks: [],
+    }));
+    onTaskAction('addMultiple', { day: activeDay, tasks: newTasks });
+  }
 
   return (
-    <Card>
+    <Card className="hover:bg-white/5 transition-colors">
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-lg">
           <Calendar className="w-5 h-5 text-primary" />
@@ -96,12 +108,13 @@ export function SchemeCard({ appData, onTaskAction }: SchemeCardProps) {
           </TabsList>
           {DAYS_OF_WEEK.map(day => {
             const dayKey = day.toLowerCase();
+            const tasksForDay = filteredTasks[dayKey];
             return (
               <TabsContent key={dayKey} value={dayKey}>
                 <ScrollArea className="h-[300px] pr-4 mt-4">
                   <div className="space-y-2">
-                    {appData.weeklyTasks[dayKey]?.length > 0 ? (
-                      appData.weeklyTasks[dayKey].map(task => (
+                    {tasksForDay?.length > 0 ? (
+                      tasksForDay.map(task => (
                         <TaskItem key={task.id} task={task} appData={appData} onTaskAction={onTaskAction} />
                       ))
                     ) : (
@@ -114,7 +127,15 @@ export function SchemeCard({ appData, onTaskAction }: SchemeCardProps) {
           })}
         </Tabs>
         <div className="mt-6 pt-6 border-t">
-          <h3 className="font-semibold mb-4">Add New Scheme</h3>
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="font-semibold">Add New Scheme</h3>
+             <AISchemeGeneratorDialog appData={appData} onGenerate={handleAddMultipleTasks}>
+              <Button variant="outline">
+                <Sparkles className="mr-2 h-4 w-4" />
+                Generate with AI
+              </Button>
+            </AISchemeGeneratorDialog>
+          </div>
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
               <FormField
@@ -211,10 +232,10 @@ function TaskItem({ task, appData, onTaskAction }: { task: Task, appData: AppDat
   }
 
   return (
-    <Collapsible className="group p-3 rounded-lg border bg-card-foreground/5 transition-colors hover:bg-card-foreground/10">
+    <Collapsible className="group p-3 rounded-lg border bg-card/80 transition-colors hover:bg-accent/10 hover:border-accent/50">
       <div className="flex items-center gap-3">
         <div
-          className={cn("w-5 h-5 rounded-full border-2 cursor-pointer flex-shrink-0 flex items-center justify-center", task.completed ? 'bg-accent border-accent' : 'border-muted-foreground')}
+          className={cn("w-5 h-5 rounded-full border-2 cursor-pointer flex-shrink-0 flex items-center justify-center transition-colors", task.completed ? 'bg-accent border-accent' : 'border-muted-foreground group-hover:border-primary')}
           onClick={() => onTaskAction('toggle', { taskId: task.id })}
         >
           {task.completed && <span className="text-white text-xs font-bold">✓</span>}
@@ -224,10 +245,10 @@ function TaskItem({ task, appData, onTaskAction }: { task: Task, appData: AppDat
         </CollapsibleTrigger>
         <div className="flex items-center gap-1 ml-auto">
            <RefineBenefitsDialog appData={appData} task={task} onUpdateBenefits={updateTaskBenefits}>
-              <Button variant="ghost" size="icon" className="h-7 w-7" title="Refine Benefits with AI"><BrainCircuit className="w-4 h-4 text-primary" /></Button>
+              <Button variant="ghost" size="icon" className="h-7 w-7 opacity-70 group-hover:opacity-100" title="Refine Benefits with AI"><BrainCircuit className="w-4 h-4 text-primary" /></Button>
            </RefineBenefitsDialog>
-          <Button variant="ghost" size="icon" className="h-7 w-7" title="Add to Focus" onClick={() => onTaskAction('focus', { taskId: task.id })}><Star className="w-4 h-4" /></Button>
-          <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" title="Delete Task" onClick={() => onTaskAction('delete', { taskId: task.id })}><Trash2 className="w-4 h-4" /></Button>
+          <Button variant="ghost" size="icon" className="h-7 w-7 opacity-70 group-hover:opacity-100" title="Add to Focus" onClick={() => onTaskAction('focus', { taskId: task.id })}><Star className="w-4 h-4" /></Button>
+          <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive/70 hover:text-destructive opacity-70 group-hover:opacity-100" title="Delete Task" onClick={() => onTaskAction('delete', { taskId: task.id })}><Trash2 className="w-4 h-4" /></Button>
         </div>
       </div>
       <CollapsibleContent className="pl-8 pt-3 space-y-3">
@@ -250,7 +271,7 @@ function TaskItem({ task, appData, onTaskAction }: { task: Task, appData: AppDat
             {task.subtasks.map(subtask => (
                 <div key={subtask.id} className="flex items-center gap-3">
                     <div
-                      className={cn("w-4 h-4 rounded-full border-2 cursor-pointer flex-shrink-0 flex items-center justify-center", subtask.completed ? 'bg-accent/80 border-accent/80' : 'border-muted-foreground/50')}
+                      className={cn("w-4 h-4 rounded-full border-2 cursor-pointer flex-shrink-0 flex items-center justify-center transition-colors", subtask.completed ? 'bg-accent/80 border-accent/80' : 'border-muted-foreground/50 hover:border-primary')}
                       onClick={() => onTaskAction('toggle', { taskId: subtask.id })}
                     >
                       {subtask.completed && <span className="text-white text-[10px] font-bold">✓</span>}
@@ -269,6 +290,7 @@ function TaskItem({ task, appData, onTaskAction }: { task: Task, appData: AppDat
               onChange={(e) => setSubtaskInput(e.target.value)}
               placeholder="Add sub-task..."
               className="h-8 text-sm"
+              spellCheck="false"
             />
             <Button type="submit" size="sm" variant="ghost"><PlusCircle className="w-4 h-4 mr-1"/> Add</Button>
         </form>
