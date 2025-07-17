@@ -585,7 +585,7 @@ export default function Home() {
             });
         };
 
-        const intervalId = setInterval(updateAllNemeses, 60 * 1000); // 1 minute
+        const intervalId = setInterval(updateAllNemeses, 30 * 60 * 1000); // 30 minutes
 
         return () => clearInterval(intervalId);
     }, []);
@@ -744,3 +744,5 @@ export default function Home() {
     </main>
   );
 }
+
+    
