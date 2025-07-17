@@ -11,7 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Plus, Trash2, Star, BrainCircuit, Info, ChevronDown, ChevronRight, PlusCircle } from "lucide-react";
+import { Plus, Trash2, Star, BrainCircuit, Info, ChevronDown, ChevronRight, PlusCircle, Calendar } from "lucide-react";
 import { RefineBenefitsDialog } from "./refine-benefits-dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
