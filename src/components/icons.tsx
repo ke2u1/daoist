@@ -6,19 +6,13 @@ export function YinYang(props: SVGProps<SVGSVGElement>) {
             xmlns="http://www.w3.org/2000/svg"
             width="24"
             height="24"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
+            viewBox="0 0 100 100"
             {...props}
         >
-            <circle cx="12" cy="12" r="10" />
-            <path d="M12 2a10 10 0 0 0-10 10c0 4.42 2.866 8.114 6.837 9.488A10 10 0 0 1 12 2v10z" fill="currentColor" />
-            <path d="M12 2a10 10 0 0 1 10 10c0-4.42-2.866-8.114-6.837-9.488A10 10 0 0 0 12 2v10z" />
-            <circle cx="12" cy="7" r="2" fill="white" stroke="none" />
-            <circle cx="12" cy="17" r="2" fill="currentColor" stroke="none" />
+            <circle cx="50" cy="50" r="50" fill="currentColor"/>
+            <path d="M50,0 A50,50 0 0,1 50,100 A25,25 0 0,0 50,50 A25,25 0 0,1 50,0 Z" fill="white"/>
+            <circle cx="50" cy="25" r="12" fill="currentColor"/>
+            <circle cx="50" cy="75" r="12" fill="white"/>
         </svg>
     )
 }
