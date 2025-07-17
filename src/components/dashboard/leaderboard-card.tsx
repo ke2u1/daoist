@@ -1,3 +1,4 @@
+
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -9,17 +10,15 @@ import type { Nemesis } from "@/lib/types";
 
 type LeaderboardCardProps = {
   userPoints: number;
-  nemesis: Nemesis | null;
+  nemesis: Nemesis[];
 };
 
 export function LeaderboardCard({ userPoints, nemesis }: LeaderboardCardProps) {
   const [showAll, setShowAll] = useState(false);
   
   const allContestants = useMemo(() => {
-    const contestants = [...VENERABLES, { name: "You", points: userPoints }];
-    if (nemesis) {
-        contestants.push({ name: nemesis.name, points: nemesis.points, isNemesis: true });
-    }
+    const rivals = nemesis.map(n => ({ name: n.name, points: n.points, isNemesis: true }));
+    const contestants = [...VENERABLES, { name: "You", points: userPoints }, ...rivals];
     return contestants.sort((a, b) => b.points - a.points);
   }, [userPoints, nemesis]);
   

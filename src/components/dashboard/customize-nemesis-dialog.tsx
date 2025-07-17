@@ -1,3 +1,4 @@
+
 // components/dashboard/customize-nemesis-dialog.tsx
 "use client";
 
@@ -25,14 +26,14 @@ import type { AppData, Nemesis } from "@/lib/types";
 type CustomizeNemesisDialogProps = {
   children: React.ReactNode;
   appData: AppData;
-  onUpdate: (nemesis: Nemesis) => void;
+  onAdd: (nemesis: Nemesis) => void;
 };
 
 const formSchema = z.object({
     prompt: z.string().min(10, "Please describe your rival in more detail (at least 10 characters)."),
 });
 
-export function CustomizeNemesisDialog({ children, appData, onUpdate }: CustomizeNemesisDialogProps) {
+export function CustomizeNemesisDialog({ children, appData, onAdd }: CustomizeNemesisDialogProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
@@ -46,19 +47,19 @@ export function CustomizeNemesisDialog({ children, appData, onUpdate }: Customiz
 
   const handleGenerate = async (values: z.infer<typeof formSchema>) => {
     setIsLoading(true);
-    toast({ title: "Summoning Your Rival...", description: "The AI is forging your nemesis based on your design." });
+    toast({ title: "Summoning a New Rival...", description: "The AI is forging a nemesis based on your design." });
     try {
       const result = await customizeNemesisAction({
         prompt: values.prompt,
         userRank: appData.stats.rank,
         objective: appData.objective,
       });
-      onUpdate(result);
+      onAdd(result);
       setIsOpen(false);
       form.reset();
       toast({
         title: "Rival Manifested!",
-        description: "Your custom rival has entered the world.",
+        description: "A new custom rival has entered the world.",
       });
     } catch (error) {
       toast({
@@ -78,10 +79,10 @@ export function CustomizeNemesisDialog({ children, appData, onUpdate }: Customiz
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Wand2 className="w-5 h-5 text-primary" />
-            Customize Your Rival
+            Add a Custom Rival
           </DialogTitle>
           <DialogDescription>
-            Describe your ideal rival. The AI will bring them to life. Be descriptive! Try mentioning their name, field, or personality.
+            Describe your ideal rival. The AI will bring them to life. Be descriptive! Try mentioning their name, field, or personality. A new rival will be added to your list.
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>

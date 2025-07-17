@@ -1,3 +1,4 @@
+
 import { z } from 'zod';
 
 export interface SubTask {
@@ -99,7 +100,7 @@ export interface AppData {
   tribulation: Tribulation | null;
   journalEntries: JournalEntry[];
   advisor: AdvisorFeedback | null;
-  nemesis: Nemesis | null;
+  nemesis: Nemesis[];
 }
 
 // AI Schema Types

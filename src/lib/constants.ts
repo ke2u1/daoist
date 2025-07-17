@@ -1,3 +1,4 @@
+
 import type { AppData } from './types';
 
 export const DAYS_OF_WEEK = [
@@ -142,5 +143,5 @@ export const DEFAULT_APP_DATA: AppData = {
   tribulation: null,
   journalEntries: [],
   advisor: null,
-  nemesis: null,
+  nemesis: [],
 };

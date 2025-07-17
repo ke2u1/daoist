@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useEffect, useCallback } from "react";
@@ -39,13 +40,14 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
-import { generateTribulationAction, generateNemesisAction, updateNemesisAction } from "@/app/actions";
+import { generateTribulationAction, generateNemesisAction, updateNemesisAction, customizeNemesisAction } from "@/app/actions";
 import { SearchResultsCard } from "@/components/dashboard/search-results-card";
 import { AdvisorCard } from "@/components/dashboard/advisor-card";
 import { DaoChart } from "@/components/dashboard/dao-chart";
 import { JournalCard } from "@/components/dashboard/journal-card";
 import { NemesisCard } from "@/components/dashboard/nemesis-card";
 import { ApertureCard } from "@/components/dashboard/aperture-card";
+import { CustomizeNemesisDialog } from "@/components/dashboard/customize-nemesis-dialog";
 
 
 const DATA_KEY = "essenceTrackerDataV2";
@@ -98,7 +100,11 @@ export default function Home() {
         if (!validatedData.tribulation) validatedData.tribulation = null;
         if (!validatedData.journalEntries) validatedData.journalEntries = [];
         if (!validatedData.advisor) validatedData.advisor = null;
-        if (!validatedData.nemesis) validatedData.nemesis = null;
+        if (!validatedData.nemesis) validatedData.nemesis = []; // Updated for multiple rivals
+        if (typeof validatedData.nemesis === 'object' && validatedData.nemesis !== null && !Array.isArray(validatedData.nemesis)) {
+           validatedData.nemesis = [validatedData.nemesis]; // Convert old single nemesis to array
+        }
+
 
         // Reset daily essence if it's a new day
         const todayStr = new Date().toISOString().split('T')[0];
@@ -475,12 +481,23 @@ export default function Home() {
         setAppData(prevData => prevData ? ({ ...prevData, advisor: newAdvisor }) : null);
     }, []);
 
-    const handleNemesisUpdate = useCallback((newNemesis: AppData['nemesis']) => {
+    const handleNemesisUpdate = useCallback((updatedNemesis: Nemesis) => {
         setAppData(prevData => {
             if (!prevData) return null;
-            const updatedNemesis: Nemesis = newNemesis ? { ...prevData.nemesis, ...newNemesis } : null!;
-            return { ...prevData, nemesis: updatedNemesis };
+            const newNemesisList = [...prevData.nemesis];
+            const index = newNemesisList.findIndex(n => n.name === updatedNemesis.name); // Assume name is unique for now
+            if (index !== -1) {
+                newNemesisList[index] = updatedNemesis;
+            }
+            return { ...prevData, nemesis: newNemesisList };
         });
+    }, []);
+
+    const handleAddNemesis = useCallback((newNemesis: Nemesis) => {
+      setAppData(prevData => {
+          if (!prevData) return null;
+          return { ...prevData, nemesis: [...prevData.nemesis, newNemesis] };
+      });
     }, []);
 
     const handleResetData = () => {
@@ -492,49 +509,64 @@ export default function Home() {
       });
     }
 
-
-    // Effect to manage nemesis generation and updates
+    // Effect for automatic nemesis generation
     useEffect(() => {
-        if (!appData) return;
+      if (!appData) return;
 
-        const handleGenerateNemesis = async () => {
-            if (appData.nemesis) return;
-            toast({ title: "A Rival Emerges...", description: "A new challenger appears on your path." });
-            try {
-                const newNemesis = await generateNemesisAction({ 
-                    userRank: appData.stats.rank,
-                    objective: appData.objective,
-                    shortTermGoal: appData.shortTermGoal,
+      const handleGenerateFirstNemesis = async () => {
+          if (appData.nemesis.length > 0) return;
+          toast({ title: "A Rival Emerges...", description: "A new challenger appears on your path." });
+          try {
+              const newNemesis = await generateNemesisAction({ 
+                  userRank: appData.stats.rank,
+                  objective: appData.objective,
+                  shortTermGoal: appData.shortTermGoal,
+              });
+              handleAddNemesis(newNemesis);
+          } catch (error) {
+              console.error("Failed to generate nemesis:", error);
+          }
+      };
+
+      handleGenerateFirstNemesis();
+    }, [appData?.stats.rank, appData?.objective, appData?.shortTermGoal, appData?.nemesis.length, handleAddNemesis]);
+
+    // Effect for periodic nemesis updates
+    useEffect(() => {
+        const updateAllNemeses = async () => {
+            if (!appData || appData.nemesis.length === 0) return;
+
+            console.log("Updating rivals...");
+            
+            const updatePromises = appData.nemesis.map(nemesis => 
+                updateNemesisAction({ nemesis }).catch(error => {
+                    console.error(`Failed to update nemesis ${nemesis.name}:`, error);
+                    return null; // Return null on failure to not break Promise.all
+                })
+            );
+
+            const updatedNemeses = await Promise.all(updatePromises);
+            
+            setAppData(prevData => {
+                if (!prevData) return null;
+                const newNemesisList = [...prevData.nemesis];
+                updatedNemeses.forEach(updatedNemesis => {
+                    if (updatedNemesis) {
+                        const index = newNemesisList.findIndex(n => n.name === updatedNemesis.name);
+                        if (index !== -1) {
+                            newNemesisList[index] = updatedNemesis;
+                        }
+                    }
                 });
-                handleNemesisUpdate(newNemesis);
-            } catch (error) {
-                console.error("Failed to generate nemesis:", error);
-            }
+                return { ...prevData, nemesis: newNemesisList };
+            });
         };
 
-        const handleUpdateNemesis = async () => {
-            if (!appData.nemesis) return;
-            const lastUpdate = new Date(appData.nemesis.lastUpdated);
-            const now = new Date();
-            const diffDays = Math.ceil((now.getTime() - lastUpdate.getTime()) / (1000 * 60 * 60 * 24));
+        const intervalId = setInterval(updateAllNemeses, 5 * 60 * 1000); // 5 minutes
 
-            if (diffDays >= 7) {
-                toast({ title: "Your Rival Stirs...", description: "Word of your nemesis's progress reaches you." });
-                try {
-                    const updatedNemesis = await updateNemesisAction({ nemesis: appData.nemesis });
-                    handleNemesisUpdate(updatedNemesis);
-                } catch (error) {
-                    console.error("Failed to update nemesis:", error);
-                }
-            }
-        };
+        return () => clearInterval(intervalId); // Cleanup on component unmount
+    }, [appData, setAppData]);
 
-        if (!appData.nemesis) {
-            handleGenerateNemesis();
-        } else {
-            handleUpdateNemesis();
-        }
-    }, [appData?.stats.rank, appData?.objective, appData?.shortTermGoal]); // Rerun if these change, but not on every appData change.
 
   if (!appData) {
     return (
@@ -633,9 +665,11 @@ export default function Home() {
                 onClaim={handleClaimReward}
             />
 
-            {appData.nemesis && (
-              <div className="lg:col-span-3">
-                  <NemesisCard appData={appData} onUpdate={handleNemesisUpdate} />
+            {appData.nemesis.length > 0 && (
+              <div className="lg:col-span-3 grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {appData.nemesis.map((nemesis) => (
+                    <NemesisCard key={nemesis.name} nemesis={nemesis} />
+                  ))}
               </div>
             )}
             
@@ -671,7 +705,7 @@ export default function Home() {
         {/* Achievements & Settings */}
         <div className="grid grid-cols-1 gap-6">
             <AchievementsCard achievements={appData.stats.achievements} />
-            <SettingsCard appData={appData} onImport={setAppData} onReset={handleResetData} />
+            <SettingsCard appData={appData} onImport={setAppData} onReset={handleResetData} onAddRival={handleAddNemesis} />
         </div>
 
       </div>

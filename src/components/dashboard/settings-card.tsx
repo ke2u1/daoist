@@ -1,20 +1,23 @@
+
 "use client";
 
 import { useRef, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Cog, FileDown, FileUp, RotateCcw } from "lucide-react";
+import { Cog, FileDown, FileUp, RotateCcw, UserPlus } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import type { AppData } from "@/lib/types";
+import type { AppData, Nemesis } from "@/lib/types";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { CustomizeNemesisDialog } from "./customize-nemesis-dialog";
 
 type SettingsCardProps = {
   appData: AppData;
   onImport: (data: AppData) => void;
   onReset: () => void;
+  onAddRival: (nemesis: Nemesis) => void;
 };
 
-export function SettingsCard({ appData, onImport, onReset }: SettingsCardProps) {
+export function SettingsCard({ appData, onImport, onReset, onAddRival }: SettingsCardProps) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
   const [isResetAlertOpen, setIsResetAlertOpen] = useState(false);
@@ -74,16 +77,22 @@ export function SettingsCard({ appData, onImport, onReset }: SettingsCardProps) 
           Settings & Data
         </CardTitle>
         <CardDescription>
-          Backup your progress, transfer it, or start a new path.
+          Backup your progress, add new rivals, or start a new path.
         </CardDescription>
       </CardHeader>
-      <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <CardContent className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <Button onClick={handleExport} className="w-full">
           <FileDown className="mr-2 h-4 w-4" /> Export Data
         </Button>
         <Button onClick={handleImportClick} variant="secondary" className="w-full">
           <FileUp className="mr-2 h-4 w-4" /> Import Data
         </Button>
+
+        <CustomizeNemesisDialog appData={appData} onAdd={onAddRival}>
+          <Button variant="outline" className="w-full">
+            <UserPlus className="mr-2 h-4 w-4" /> Add New Rival
+          </Button>
+        </CustomizeNemesisDialog>
 
         <AlertDialog open={isResetAlertOpen} onOpenChange={setIsResetAlertOpen}>
           <AlertDialogTrigger asChild>
