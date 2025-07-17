@@ -1,4 +1,5 @@
 
+
 import { z } from 'zod';
 
 export interface SubTask {
@@ -90,7 +91,7 @@ export type Nemesis = z.infer<typeof NemesisSchema>;
 export interface Milestone {
   id: number;
   date: string; // ISO string
-  type: 'RANK_UP' | 'TRIBULATION_COMPLETE' | 'TRIBULATION_FAILED' | 'REWARD_CLAIMED' | 'NEMESIS_GENERATED' | 'JOURNAL_ENTRY';
+  type: 'RANK_UP' | 'TRIBULATION_COMPLETE' | 'TRIBULATION_FAILED' | 'REWARD_CLAIMED' | 'NEMESIS_GENERATED' | 'JOURNAL_ENTRY' | 'TASK_COMPLETE';
   title: string;
   description: string;
 }
@@ -226,3 +227,5 @@ export const GenerateMindPalaceImageOutputSchema = z.object({
     imageUrl: z.string().url().describe("The data URI of the generated image."),
 });
 export type GenerateMindPalaceImageOutput = z.infer<typeof GenerateMindPalaceImageOutputSchema>;
+
+    

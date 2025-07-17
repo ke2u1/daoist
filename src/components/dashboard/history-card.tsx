@@ -1,9 +1,10 @@
+
 // components/dashboard/history-card.tsx
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { History, Star, Zap, Award, User, BookOpen } from "lucide-react";
+import { History, Star, Zap, Award, User, BookOpen, CheckCircle } from "lucide-react";
 import { format } from "date-fns";
 import type { Milestone } from "@/lib/types";
 
@@ -18,6 +19,7 @@ const MILESTONE_ICONS = {
   REWARD_CLAIMED: <Award className="w-4 h-4 text-accent" />,
   NEMESIS_GENERATED: <User className="w-4 h-4 text-destructive" />,
   JOURNAL_ENTRY: <BookOpen className="w-4 h-4 text-blue-400" />,
+  TASK_COMPLETE: <CheckCircle className="w-4 h-4 text-green-400" />,
 };
 
 export function HistoryCard({ milestones }: HistoryCardProps) {
@@ -38,7 +40,7 @@ export function HistoryCard({ milestones }: HistoryCardProps) {
               {milestones.map((milestone) => (
                 <div key={milestone.id} className="mb-8 relative">
                     <div className="absolute -left-[23px] top-1 h-5 w-5 rounded-full bg-background border-2 border-primary flex items-center justify-center">
-                        {MILESTONE_ICONS[milestone.type]}
+                        {MILESTONE_ICONS[milestone.type] || <Star className="w-4 h-4 text-gray-400" />}
                     </div>
                     <p className="text-xs text-muted-foreground">{format(new Date(milestone.date), "MMMM d, yyyy 'at' h:mm a")}</p>
                     <h4 className="font-semibold text-foreground">{milestone.title}</h4>
@@ -56,3 +58,5 @@ export function HistoryCard({ milestones }: HistoryCardProps) {
     </Card>
   );
 }
+
+    

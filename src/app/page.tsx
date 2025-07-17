@@ -13,12 +13,12 @@ import {
   Sword,
   Trophy,
   Cog,
-  BrainCircuit,
   Search,
   Moon,
   Sun,
   LayoutGrid
 } from "lucide-react";
+import { YinYang } from "@/components/icons";
 import type { AppData, Task, Tribulation, JournalEntry, Nemesis, Milestone } from "@/lib/types";
 import {
   DEFAULT_APP_DATA,
@@ -164,10 +164,10 @@ export default function Home() {
     }
   };
 
-  const addMilestone = (milestone: Omit<Milestone, 'id' | 'date'>) => {
+  const addMilestone = useCallback((milestone: Omit<Milestone, 'id' | 'date'>) => {
     const newMilestone: Milestone = {
       ...milestone,
-      id: Date.now(),
+      id: Date.now() + Math.random(),
       date: new Date().toISOString(),
     };
     setAppData(prevData => {
@@ -175,7 +175,7 @@ export default function Home() {
         const newMilestones = [newMilestone, ...prevData.milestones];
         return { ...prevData, milestones: newMilestones };
     });
-  };
+  }, []);
 
   const checkAchievements = useCallback((currentData: AppData): AppData => {
     const unlockedAchievements: string[] = [];
@@ -214,7 +214,7 @@ export default function Home() {
           });
       }
       return currentData;
-  }, [toast]);
+  }, [toast, addMilestone]);
   
   const checkStreak = useCallback((currentData: AppData): AppData => {
       const today = new Date();
@@ -267,6 +267,13 @@ export default function Home() {
         
         newData.stats.allTimeTasksCompleted++;
         newData = checkStreak(newData);
+
+        addMilestone({
+          type: 'TASK_COMPLETE',
+          title: 'Scheme Completed: ' + task.text,
+          description: `You have successfully completed a scheme and gained ${essenceToEarn} PE.`
+      });
+
     } else {
         // Note: Un-completing doesn't refund essence to the daily capacity to prevent exploitation.
         newData.stats.totalPoints -= points;
@@ -280,7 +287,7 @@ export default function Home() {
     newData = checkRank(newData);
     newData = checkAchievements(newData);
     return newData;
-  }, [checkAchievements, checkRank, checkStreak, toast]);
+  }, [checkAchievements, checkRank, checkStreak, toast, addMilestone]);
 
 
   const handleTaskAction = useCallback((action: 'add' | 'delete' | 'toggle' | 'update' | 'focus' | 'unfocus' | 'addSubtask' | 'addMultiple', payload: any) => {
@@ -503,7 +510,7 @@ export default function Home() {
         return newData;
       });
     }
-  }, [appData, toast, checkAchievements]);
+  }, [appData, toast, checkAchievements, addMilestone]);
 
    const handleJournalUpdate = useCallback((newEntry: JournalEntry, analysis?: JournalEntry['analysis']) => {
         setAppData(prevData => {
@@ -522,7 +529,7 @@ export default function Home() {
             }
             return { ...prevData, journalEntries: newEntries };
         });
-    }, []);
+    }, [addMilestone]);
 
     const handleAdvisorUpdate = useCallback((newAdvisor: AppData['advisor']) => {
         setAppData(prevData => prevData ? ({ ...prevData, advisor: newAdvisor }) : null);
@@ -550,7 +557,7 @@ export default function Home() {
           });
           return { ...prevData, nemesis: [...prevData.nemesis, newNemesis] };
       });
-    }, []);
+    }, [addMilestone]);
     
     const handleDeleteNemesis = useCallback((nemesisId: number) => {
       setAppData(prevData => {
@@ -648,7 +655,7 @@ export default function Home() {
   if (!appData) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-background">
-        <BrainCircuit className="w-12 h-12 animate-pulse text-primary" />
+        <YinYang className="w-12 h-12 animate-pulse text-primary" />
       </div>
     );
   }
@@ -804,5 +811,3 @@ export default function Home() {
     </main>
   );
 }
-
-    
