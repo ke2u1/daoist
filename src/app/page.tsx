@@ -16,8 +16,6 @@ import {
   Search,
   Moon,
   Sun,
-  Sparkles,
-  Zap,
 } from "lucide-react";
 import type { AppData, Task, Tribulation, JournalEntry } from "@/lib/types";
 import {
@@ -40,11 +38,13 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
-import { generateTribulationAction } from "@/app/actions";
+import { generateTribulationAction, generateNemesisAction, updateNemesisAction } from "@/app/actions";
 import { SearchResultsCard } from "@/components/dashboard/search-results-card";
 import { AdvisorCard } from "@/components/dashboard/advisor-card";
 import { DaoChart } from "@/components/dashboard/dao-chart";
 import { JournalCard } from "@/components/dashboard/journal-card";
+import { NemesisCard } from "@/components/dashboard/nemesis-card";
+import { ApertureCard } from "@/components/dashboard/aperture-card";
 
 
 const DATA_KEY = "essenceTrackerDataV2";
@@ -90,13 +90,22 @@ export default function Home() {
       if (savedData) {
         const parsedData = JSON.parse(savedData);
         // Migration and validation
-        const validatedData = { ...DEFAULT_APP_DATA, ...parsedData };
+        let validatedData = { ...DEFAULT_APP_DATA, ...parsedData };
         validatedData.stats = { ...DEFAULT_APP_DATA.stats, ...parsedData.stats };
         validatedData.rewardSystem = { ...DEFAULT_APP_DATA.rewardSystem, ...parsedData.rewardSystem };
         if (!validatedData.stats.dailyProgress) validatedData.stats.dailyProgress = [];
         if (!validatedData.tribulation) validatedData.tribulation = null;
         if (!validatedData.journalEntries) validatedData.journalEntries = [];
         if (!validatedData.advisor) validatedData.advisor = null;
+        if (!validatedData.nemesis) validatedData.nemesis = null;
+
+        // Reset daily essence if it's a new day
+        const todayStr = new Date().toISOString().split('T')[0];
+        if (validatedData.stats.lastDateForEssence !== todayStr) {
+            validatedData.stats.currentEssenceEarnedToday = 0;
+            validatedData.stats.lastDateForEssence = todayStr;
+        }
+
         setAppData(validatedData);
       } else {
         setAppData(JSON.parse(JSON.stringify(DEFAULT_APP_DATA)));
@@ -203,16 +212,31 @@ export default function Home() {
     let todayProgress = newData.stats.dailyProgress.find(d => d.date === todayStr);
 
     if (isCompleting) {
-        newData.stats.totalPoints += points;
-        newData.rewardSystem.progress += points;
-        newData.stats.allTimeTasksCompleted++;
-        if (todayProgress) {
-          todayProgress.points += points;
-        } else {
-          newData.stats.dailyProgress.push({ date: todayStr, points });
+        const essenceToEarn = Math.min(points, newData.stats.dailyEssenceCapacity - newData.stats.currentEssenceEarnedToday);
+        if (essenceToEarn < points) {
+            toast({
+                title: "Aperture Limit Reached",
+                description: `You can only absorb ${essenceToEarn} more Essence today. Complete this scheme tomorrow for full benefits.`,
+                variant: "destructive"
+            });
         }
+        
+        if (essenceToEarn > 0) {
+            newData.stats.totalPoints += essenceToEarn;
+            newData.stats.currentEssenceEarnedToday += essenceToEarn;
+            newData.rewardSystem.progress += essenceToEarn;
+
+            if (todayProgress) {
+              todayProgress.points += essenceToEarn;
+            } else {
+              newData.stats.dailyProgress.push({ date: todayStr, points: essenceToEarn });
+            }
+        }
+        
+        newData.stats.allTimeTasksCompleted++;
         newData = checkStreak(newData);
     } else {
+        // Note: Un-completing doesn't refund essence to the daily capacity to prevent exploitation.
         newData.stats.totalPoints -= points;
         newData.rewardSystem.progress = Math.max(0, newData.rewardSystem.progress - points);
         newData.stats.allTimeTasksCompleted = Math.max(0, newData.stats.allTimeTasksCompleted - 1);
@@ -224,7 +248,7 @@ export default function Home() {
     newData = checkRank(newData);
     newData = checkAchievements(newData);
     return newData;
-  }, [checkAchievements, checkRank, checkStreak]);
+  }, [checkAchievements, checkRank, checkStreak, toast]);
 
 
   const handleTaskAction = useCallback((action: 'add' | 'delete' | 'toggle' | 'update' | 'focus' | 'unfocus' | 'addSubtask' | 'addMultiple', payload: any) => {
@@ -450,6 +474,50 @@ export default function Home() {
         setAppData(prevData => prevData ? ({ ...prevData, advisor: newAdvisor }) : null);
     }, []);
 
+    const handleNemesisUpdate = useCallback((newNemesis: AppData['nemesis']) => {
+        setAppData(prevData => prevData ? ({ ...prevData, nemesis: newNemesis }) : null);
+    }, []);
+
+
+    // Effect to manage nemesis generation and updates
+    useEffect(() => {
+        if (!appData) return;
+
+        const handleGenerateNemesis = async () => {
+            if (appData.nemesis) return;
+            toast({ title: "A Rival Emerges...", description: "A new challenger appears on your path." });
+            try {
+                const newNemesis = await generateNemesisAction({ userRank: appData.stats.rank });
+                handleNemesisUpdate(newNemesis);
+            } catch (error) {
+                console.error("Failed to generate nemesis:", error);
+            }
+        };
+
+        const handleUpdateNemesis = async () => {
+            if (!appData.nemesis) return;
+            const lastUpdate = new Date(appData.nemesis.lastUpdated);
+            const now = new Date();
+            const diffDays = Math.ceil((now.getTime() - lastUpdate.getTime()) / (1000 * 60 * 60 * 24));
+
+            if (diffDays >= 7) {
+                toast({ title: "Your Rival Stirs...", description: "Word of your nemesis's progress reaches you." });
+                try {
+                    const updatedNemesis = await updateNemesisAction({ nemesis: appData.nemesis });
+                    handleNemesisUpdate(updatedNemesis);
+                } catch (error) {
+                    console.error("Failed to update nemesis:", error);
+                }
+            }
+        };
+
+        if (!appData.nemesis) {
+            handleGenerateNemesis();
+        } else {
+            handleUpdateNemesis();
+        }
+    }, [appData, handleNemesisUpdate, toast]);
+
   if (!appData) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-background">
@@ -472,6 +540,7 @@ export default function Home() {
               className="pl-10"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
+              spellCheck="false"
             />
           </div>
           <Button onClick={toggleTheme} variant="outline" size="icon">
@@ -555,6 +624,12 @@ export default function Home() {
             <AdvisorCard appData={appData} onUpdate={handleAdvisorUpdate} />
           </div>
 
+          {appData.nemesis && (
+            <div className="lg:col-span-3">
+                <NemesisCard nemesis={appData.nemesis} />
+            </div>
+          )}
+
           {appData.tribulation && (
             <div className="lg:col-span-3">
               <TribulationCard 
@@ -565,16 +640,23 @@ export default function Home() {
             </div>
           )}
 
-          <div className="lg:col-span-3 grid grid-cols-1 md:grid-cols-2 gap-6">
-             <ProgressDashboard stats={appData.stats} onWasteEssence={handleWasteEssence} />
-             <RewardCard 
-               rewardSystem={appData.rewardSystem} 
-               onUpdate={handleRewardSystemUpdate} 
-               onClaim={handleClaimReward}
-             />
+          <div className="lg:col-span-3 grid grid-cols-1 md:grid-cols-3 gap-6">
+             <div className="md:col-span-1">
+                <ApertureCard stats={appData.stats} />
+             </div>
+             <div className="md:col-span-1">
+                <ProgressDashboard stats={appData.stats} onWasteEssence={handleWasteEssence} />
+             </div>
+             <div className="md:col-span-1">
+                <RewardCard 
+                   rewardSystem={appData.rewardSystem} 
+                   onUpdate={handleRewardSystemUpdate} 
+                   onClaim={handleClaimReward}
+                 />
+             </div>
           </div>
            <div className="lg:col-span-3">
-             <LeaderboardCard userPoints={appData.stats.totalPoints} />
+             <LeaderboardCard userPoints={appData.stats.totalPoints} nemesis={appData.nemesis}/>
           </div>
           <div className="lg:col-span-3">
             <DaoChart appData={appData} />

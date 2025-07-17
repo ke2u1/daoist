@@ -35,6 +35,9 @@ export interface Stats {
   lastCompletedDate: number | null;
   achievements: { [key: string]: boolean };
   dailyProgress: DailyProgress[];
+  dailyEssenceCapacity: number;
+  currentEssenceEarnedToday: number;
+  lastDateForEssence: string; // "YYYY-MM-DD"
 }
 
 export interface RewardSystem {
@@ -71,6 +74,16 @@ export interface AdvisorFeedback {
     generatedDate: string; // ISO string
 }
 
+export interface Nemesis {
+    name: string;
+    title: string;
+    rank: string;
+    points: number;
+    backstory: string;
+    lastAction: string;
+    lastUpdated: string; // ISO string
+}
+
 export interface AppData {
   objective: string;
   shortTermGoal: string;
@@ -86,6 +99,7 @@ export interface AppData {
   tribulation: Tribulation | null;
   journalEntries: JournalEntry[];
   advisor: AdvisorFeedback | null;
+  nemesis: Nemesis | null;
 }
 
 // AI Schema Types
@@ -155,3 +169,26 @@ export const AnalyzeJournalEntryOutputSchema = z.object({
     themes: z.array(z.string()).describe("Up to three key themes or recurring thoughts from the entry."),
 });
 export type AnalyzeJournalEntryOutput = z.infer<typeof AnalyzeJournalEntryOutputSchema>;
+
+// Nemesis Schemas
+export const GenerateNemesisInputSchema = z.object({
+    userRank: z.string().describe("The user's current rank to calibrate the nemesis's strength."),
+});
+export type GenerateNemesisInput = z.infer<typeof GenerateNemesisInputSchema>;
+
+export const NemesisSchema = z.object({
+    name: z.string().describe("A creative and thematic name for the nemesis (e.g., 'Shadow Sovereign Xiao Chen')."),
+    title: z.string().describe("A title for the nemesis (e.g., 'The Unseen Blade')."),
+    rank: z.string().describe("The nemesis's current rank, which should be similar to the user's rank."),
+    points: z.number().describe("The nemesis's starting Primeval Essence, close to the user's current rank requirements."),
+    backstory: z.string().describe("A short, compelling backstory about why this person is the user's rival."),
+    lastAction: z.string().describe("A sentence describing what the nemesis was last seen doing."),
+    lastUpdated: z.string().describe("The ISO string of when the nemesis was created."),
+});
+export type GenerateNemesisOutput = z.infer<typeof NemesisSchema>;
+
+export const UpdateNemesisInputSchema = z.object({
+    nemesis: NemesisSchema,
+});
+export type UpdateNemesisInput = z.infer<typeof UpdateNemesisInputSchema>;
+export type UpdateNemesisOutput = z.infer<typeof NemesisSchema>;
