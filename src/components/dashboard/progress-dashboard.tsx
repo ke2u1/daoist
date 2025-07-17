@@ -38,10 +38,11 @@ export function ProgressDashboard({ stats, onWasteEssence }: ProgressDashboardPr
   const chartData = useMemo(() => {
     const data = [];
     const endDate = new Date();
+    const dailyProgress = stats.dailyProgress || [];
     for (let i = 6; i >= 0; i--) {
       const date = subDays(endDate, i);
       const dateString = format(date, 'yyyy-MM-dd');
-      const dayData = stats.dailyProgress.find(d => d.date === dateString);
+      const dayData = dailyProgress.find(d => d.date === dateString);
       data.push({
         date: format(date, 'MMM d'),
         points: dayData ? dayData.points : 0,
