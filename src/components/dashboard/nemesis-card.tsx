@@ -1,14 +1,20 @@
 "use client";
 
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Swords, User, BarChart2 } from "lucide-react";
-import type { Nemesis } from "@/lib/types";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
+import { Swords, User, BarChart2, Wand2 } from "lucide-react";
+import type { AppData, Nemesis } from "@/lib/types";
+import { CustomizeNemesisDialog } from "./customize-nemesis-dialog";
+import { Button } from "@/components/ui/button";
 
 type NemesisCardProps = {
-  nemesis: Nemesis;
+  appData: AppData;
+  onUpdate: (nemesis: Nemesis) => void;
 };
 
-export function NemesisCard({ nemesis }: NemesisCardProps) {
+export function NemesisCard({ appData, onUpdate }: NemesisCardProps) {
+  const { nemesis } = appData;
+  if (!nemesis) return null;
+
   return (
     <Card className="border-destructive/50 bg-destructive/5 hover:bg-destructive/10 transition-colors">
       <CardHeader>
@@ -40,6 +46,14 @@ export function NemesisCard({ nemesis }: NemesisCardProps) {
             </div>
         </div>
       </CardContent>
+      <CardFooter>
+        <CustomizeNemesisDialog appData={appData} onUpdate={onUpdate}>
+            <Button variant="outline" className="ml-auto">
+                <Wand2 className="mr-2 h-4 w-4" />
+                Edit Rival
+            </Button>
+        </CustomizeNemesisDialog>
+      </CardFooter>
     </Card>
   );
 }

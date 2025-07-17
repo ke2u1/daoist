@@ -7,8 +7,9 @@ import { generateAdvisorFeedback } from "@/ai/flows/generate-advisor-feedback";
 import { analyzeJournalEntry } from "@/ai/flows/analyze-journal-entry";
 import { generateNemesis } from "@/ai/flows/generate-nemesis";
 import { updateNemesis } from "@/ai/flows/update-nemesis";
+import { customizeNemesis } from "@/ai/flows/customize-nemesis";
 
-import type { GenerateSchemesInput, GenerateSchemesOutput, GenerateTribulationInput, GenerateTribulationOutput, GenerateAdvisorFeedbackInput, GenerateAdvisorFeedbackOutput, AnalyzeJournalEntryInput, AnalyzeJournalEntryOutput, GenerateNemesisInput, GenerateNemesisOutput, UpdateNemesisInput, UpdateNemesisOutput } from "@/lib/types";
+import type { GenerateSchemesInput, GenerateSchemesOutput, GenerateTribulationInput, GenerateTribulationOutput, GenerateAdvisorFeedbackInput, GenerateAdvisorFeedbackOutput, AnalyzeJournalEntryInput, AnalyzeJournalEntryOutput, GenerateNemesisInput, GenerateNemesisOutput, UpdateNemesisInput, UpdateNemesisOutput, CustomizeNemesisInput, CustomizeNemesisOutput } from "@/lib/types";
 
 export async function refineTaskBenefitsAction(input: RefineTaskBenefitsInput): Promise<RefineTaskBenefitsOutput> {
     try {
@@ -77,5 +78,15 @@ export async function updateNemesisAction(input: UpdateNemesisInput): Promise<Up
     } catch (error) {
         console.error("Error updating nemesis:", error);
         throw new Error("Failed to update nemesis from AI.");
+    }
+}
+
+export async function customizeNemesisAction(input: CustomizeNemesisInput): Promise<CustomizeNemesisOutput> {
+    try {
+        const result = await customizeNemesis(input);
+        return result;
+    } catch (error) {
+        console.error("Error customizing nemesis:", error);
+        throw new Error("Failed to customize nemesis from AI.");
     }
 }

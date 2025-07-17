@@ -18,7 +18,7 @@ import {
   Sun,
   LayoutGrid
 } from "lucide-react";
-import type { AppData, Task, Tribulation, JournalEntry } from "@/lib/types";
+import type { AppData, Task, Tribulation, JournalEntry, Nemesis } from "@/lib/types";
 import {
   DEFAULT_APP_DATA,
   DAYS_OF_WEEK,
@@ -476,7 +476,11 @@ export default function Home() {
     }, []);
 
     const handleNemesisUpdate = useCallback((newNemesis: AppData['nemesis']) => {
-        setAppData(prevData => prevData ? ({ ...prevData, nemesis: newNemesis }) : null);
+        setAppData(prevData => {
+            if (!prevData) return null;
+            const updatedNemesis: Nemesis = newNemesis ? { ...prevData.nemesis, ...newNemesis } : null!;
+            return { ...prevData, nemesis: updatedNemesis };
+        });
     }, []);
 
     const handleResetData = () => {
@@ -530,7 +534,7 @@ export default function Home() {
         } else {
             handleUpdateNemesis();
         }
-    }, [appData, handleNemesisUpdate, toast]);
+    }, [appData?.stats.rank, appData?.objective, appData?.shortTermGoal]); // Rerun if these change, but not on every appData change.
 
   if (!appData) {
     return (
@@ -631,7 +635,7 @@ export default function Home() {
 
             {appData.nemesis && (
               <div className="lg:col-span-3">
-                  <NemesisCard nemesis={appData.nemesis} />
+                  <NemesisCard appData={appData} onUpdate={handleNemesisUpdate} />
               </div>
             )}
             

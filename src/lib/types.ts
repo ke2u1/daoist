@@ -194,3 +194,11 @@ export const UpdateNemesisInputSchema = z.object({
 });
 export type UpdateNemesisInput = z.infer<typeof UpdateNemesisInputSchema>;
 export type UpdateNemesisOutput = z.infer<typeof NemesisSchema>;
+
+export const CustomizeNemesisInputSchema = z.object({
+    prompt: z.string().describe("A user-provided prompt describing their desired rival. Can include name, goals, personality, etc."),
+    userRank: z.string().describe("The user's current rank."),
+    objective: z.string().describe("The user's ultimate goal for context."),
+});
+export type CustomizeNemesisInput = z.infer<typeof CustomizeNemesisInputSchema>;
+export type CustomizeNemesisOutput = z.infer<typeof NemesisSchema>;
