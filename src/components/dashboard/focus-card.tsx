@@ -23,7 +23,7 @@ export function FocusCard({ taskIds, allTasks, onTaskAction }: FocusCardProps) {
   const focusedTasks = taskIds.map(id => findTaskById(id, allTasks)).filter(Boolean) as Task[];
 
   return (
-    <Card>
+    <Card className="hover:bg-white/5 transition-colors">
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-lg">
           <Star className="w-5 h-5 text-primary" />
@@ -38,7 +38,7 @@ export function FocusCard({ taskIds, allTasks, onTaskAction }: FocusCardProps) {
         ) : (
           <ul className="space-y-2">
             {focusedTasks.map(task => (
-              <li key={task.id} className="flex items-center gap-2 p-2 rounded-md bg-card-foreground/5 border">
+              <li key={task.id} className="flex items-center gap-2 p-2 rounded-md bg-card-foreground/5 border hover:bg-card-foreground/10 transition-colors">
                 <div
                   className={`w-5 h-5 rounded-full border-2 cursor-pointer flex-shrink-0 ${
                     task.completed

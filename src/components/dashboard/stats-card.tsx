@@ -22,7 +22,7 @@ const StatItem = ({
   icon: React.ReactNode;
   className?: string;
 }) => (
-  <div className="flex flex-col items-center text-center">
+  <div className="flex flex-col items-center text-center p-2 rounded-lg hover:bg-white/5 transition-colors">
     <div className="text-sm text-muted-foreground mb-1 flex items-center gap-1.5">
       {icon} {label}
     </div>
@@ -35,7 +35,7 @@ export function StatsCard({ stats, onWasteEssence }: StatsCardProps) {
   const todayKey = today.toLowerCase();
   
   return (
-    <Card className="flex flex-col">
+    <Card className="flex flex-col hover:bg-white/5 transition-colors">
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-lg">
           <Shield className="w-5 h-5 text-primary" />

@@ -29,7 +29,7 @@ export function RewardCard({ rewardSystem, onUpdate, onClaim }: RewardCardProps)
   };
 
   return (
-    <Card className="flex flex-col">
+    <Card className="flex flex-col hover:bg-white/5 transition-colors">
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-lg">
           <Trophy className="w-5 h-5 text-primary" />

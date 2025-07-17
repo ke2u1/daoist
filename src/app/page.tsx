@@ -33,6 +33,7 @@ import { RewardCard } from "@/components/dashboard/reward-card";
 import { AchievementsCard } from "@/components/dashboard/achievements-card";
 import { SettingsCard } from "@/components/dashboard/settings-card";
 import { SchemeCard } from "@/components/dashboard/scheme-card";
+import { LeaderboardCard } from "@/components/dashboard/leaderboard-card";
 import { useToast } from "@/hooks/use-toast";
 
 const DATA_KEY = "essenceTrackerDataV1";
@@ -379,6 +380,9 @@ export default function Home() {
                onUpdate={handleRewardSystemUpdate} 
                onClaim={handleClaimReward}
              />
+          </div>
+           <div className="lg:col-span-3">
+             <LeaderboardCard userPoints={appData.stats.totalPoints} />
           </div>
           <div className="lg:col-span-3">
             <SchemeCard appData={appData} onTaskAction={handleTaskAction} />

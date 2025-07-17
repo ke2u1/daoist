@@ -65,7 +65,7 @@ export function SettingsCard({ appData, onImport }: SettingsCardProps) {
   };
 
   return (
-    <Card>
+    <Card className="hover:bg-white/5 transition-colors">
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-lg">
           <Cog className="w-5 h-5 text-primary" />

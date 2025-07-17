@@ -13,7 +13,7 @@ export function AchievementsCard({ achievements }: AchievementsCardProps) {
   const achievementList = Object.keys(ACHIEVEMENTS_CONFIG);
 
   return (
-    <Card>
+    <Card className="hover:bg-white/5 transition-colors">
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-lg">
           <Award className="w-5 h-5 text-primary" />
@@ -28,7 +28,7 @@ export function AchievementsCard({ achievements }: AchievementsCardProps) {
             return (
               <div
                 key={key}
-                className={`p-4 rounded-lg border transition-all ${isUnlocked ? 'border-accent/80 bg-accent/10' : 'border-border bg-card'}`}
+                className={`p-4 rounded-lg border transition-all ${isUnlocked ? 'border-accent/80 bg-accent/10 hover:border-accent' : 'border-border bg-card hover:border-primary/50'}`}
               >
                 <h4 className="font-semibold flex items-center justify-between">
                   {config.name}

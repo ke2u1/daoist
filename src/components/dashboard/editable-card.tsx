@@ -28,7 +28,7 @@ export function EditableCard({
   };
 
   return (
-    <Card className={cn("flex flex-col", className)}>
+    <Card className={cn("flex flex-col hover:bg-white/5 transition-colors", className)}>
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-lg">
           {icon}
@@ -38,8 +38,9 @@ export function EditableCard({
       <CardContent className="flex-grow">
         <div
           id={id}
-          className="editable h-full text-muted-foreground focus:text-foreground transition-colors rounded-md p-2 -m-2 outline-none focus:bg-white/5"
+          className="editable h-full text-muted-foreground focus:text-foreground transition-colors rounded-md p-2 -m-2 outline-none focus:bg-white/10"
           contentEditable="true"
+          spellCheck="false"
           data-placeholder={placeholder}
           dangerouslySetInnerHTML={{ __html: content }}
           onBlur={handleInput}

@@ -33,6 +33,21 @@ export const RANKS = [
   { points: 51200, name: "Rank 10 Eternal" },
 ];
 
+export const VENERABLES = [
+    { name: "Primordial Origin", points: 1000000 },
+    { name: "Star Constellation", points: 950000 },
+    { name: "Limitless", points: 920000 },
+    { name: "Reckless Savage", points: 880000 },
+    { name: "Red Lotus", points: 850000 },
+    { name: "Genesis Lotus", points: 820000 },
+    { name: "Thieving Heaven", points: 800000 },
+    { name: "Giant Sun", points: 780000 },
+    { name: "Spectral Soul", points: 760000 },
+    { name: "Paradise Earth", points: 740000 },
+    { name: "Great Dream", points: 720000 },
+    { name: "Fang Yuan", points: 700000 },
+];
+
 export const ACHIEVEMENTS_CONFIG: { [key: string]: { name: string; description: string; condition: (data: AppData) => boolean } } = {
   first_benefit: {
     name: "Calculating Mind",
