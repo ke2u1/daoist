@@ -487,7 +487,11 @@ export default function Home() {
             if (appData.nemesis) return;
             toast({ title: "A Rival Emerges...", description: "A new challenger appears on your path." });
             try {
-                const newNemesis = await generateNemesisAction({ userRank: appData.stats.rank });
+                const newNemesis = await generateNemesisAction({ 
+                    userRank: appData.stats.rank,
+                    objective: appData.objective,
+                    shortTermGoal: appData.shortTermGoal,
+                });
                 handleNemesisUpdate(newNemesis);
             } catch (error) {
                 console.error("Failed to generate nemesis:", error);

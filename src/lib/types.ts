@@ -173,16 +173,18 @@ export type AnalyzeJournalEntryOutput = z.infer<typeof AnalyzeJournalEntryOutput
 // Nemesis Schemas
 export const GenerateNemesisInputSchema = z.object({
     userRank: z.string().describe("The user's current rank to calibrate the nemesis's strength."),
+    objective: z.string().describe("The user's ultimate goal to create a relevant rival."),
+    shortTermGoal: z.string().describe("The user's short-term goal to create a relevant rival."),
 });
 export type GenerateNemesisInput = z.infer<typeof GenerateNemesisInputSchema>;
 
 export const NemesisSchema = z.object({
-    name: z.string().describe("A creative and thematic name for the nemesis (e.g., 'Shadow Sovereign Xiao Chen')."),
-    title: z.string().describe("A title for the nemesis (e.g., 'The Unseen Blade')."),
+    name: z.string().describe("A plausible real-world name for the nemesis (e.g., 'Alex Chen')."),
+    title: z.string().describe("An impressive-sounding title related to their real-world goals (e.g., 'Founder at Zenith Labs')."),
     rank: z.string().describe("The nemesis's current rank, which should be similar to the user's rank."),
     points: z.number().describe("The nemesis's starting Primeval Essence, close to the user's current rank requirements."),
-    backstory: z.string().describe("A short, compelling backstory about why this person is the user's rival."),
-    lastAction: z.string().describe("A sentence describing what the nemesis was last seen doing."),
+    backstory: z.string().describe("A short, compelling backstory about why this person is the user's rival in the real world, based on the user's goals."),
+    lastAction: z.string().describe("A sentence describing a recent, impressive, real-world feat (e.g., 'secured a new round of funding')."),
     lastUpdated: z.string().describe("The ISO string of when the nemesis was created."),
 });
 export type GenerateNemesisOutput = z.infer<typeof NemesisSchema>;
