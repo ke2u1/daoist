@@ -514,7 +514,7 @@ export default function Home() {
       if (!appData) return;
 
       const handleGenerateFirstNemesis = async () => {
-          if (appData.nemesis.length > 0) return;
+          if (appData.nemesis.length > 0 || appData.stats.rank === 'Recruit') return;
           toast({ title: "A Rival Emerges...", description: "A new challenger appears on your path." });
           try {
               const newNemesis = await generateNemesisAction({ 
@@ -531,41 +531,54 @@ export default function Home() {
       handleGenerateFirstNemesis();
     }, [appData?.stats.rank, appData?.objective, appData?.shortTermGoal, appData?.nemesis.length, handleAddNemesis]);
 
-    // Effect for periodic nemesis updates
+    // Effect for periodic nemesis updates.
     useEffect(() => {
         const updateAllNemeses = async () => {
-            if (!appData || appData.nemesis.length === 0) return;
+            console.log("Checking for rival updates...");
+            setAppData(currentData => {
+                if (!currentData || currentData.nemesis.length === 0) {
+                    return currentData;
+                }
+                
+                (async () => {
+                    const updatePromises = currentData.nemesis.map(nemesis => 
+                        updateNemesisAction({ nemesis }).catch(error => {
+                            console.error(`Failed to update nemesis ${nemesis.name}:`, error);
+                            return null;
+                        })
+                    );
 
-            console.log("Updating rivals...");
-            
-            const updatePromises = appData.nemesis.map(nemesis => 
-                updateNemesisAction({ nemesis }).catch(error => {
-                    console.error(`Failed to update nemesis ${nemesis.name}:`, error);
-                    return null; // Return null on failure to not break Promise.all
-                })
-            );
-
-            const updatedNemeses = await Promise.all(updatePromises);
-            
-            setAppData(prevData => {
-                if (!prevData) return null;
-                const newNemesisList = [...prevData.nemesis];
-                updatedNemeses.forEach(updatedNemesis => {
-                    if (updatedNemesis) {
-                        const index = newNemesisList.findIndex(n => n.name === updatedNemesis.name);
-                        if (index !== -1) {
-                            newNemesisList[index] = updatedNemesis;
+                    const updatedNemeses = await Promise.all(updatePromises);
+                    
+                    setAppData(prevData => {
+                        if (!prevData) return null;
+                        const newNemesisList = [...prevData.nemesis];
+                        let changed = false;
+                        updatedNemeses.forEach(updatedNemesis => {
+                            if (updatedNemesis) {
+                                const index = newNemesisList.findIndex(n => n.name === updatedNemesis.name);
+                                if (index !== -1) {
+                                    newNemesisList[index] = updatedNemesis;
+                                    changed = true;
+                                }
+                            }
+                        });
+                        if(changed) {
+                            console.log("Rivals updated.");
+                            return { ...prevData, nemesis: newNemesisList };
                         }
-                    }
-                });
-                return { ...prevData, nemesis: newNemesisList };
+                        return prevData;
+                    });
+                })();
+                
+                return currentData;
             });
         };
 
         const intervalId = setInterval(updateAllNemeses, 5 * 60 * 1000); // 5 minutes
 
-        return () => clearInterval(intervalId); // Cleanup on component unmount
-    }, [appData, setAppData]);
+        return () => clearInterval(intervalId);
+    }, []);
 
 
   if (!appData) {
