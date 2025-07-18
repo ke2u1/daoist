@@ -13,8 +13,9 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { YinYang } from '@/components/icons';
 import { Loader2 } from 'lucide-react';
+import { ProtectedRoutes } from '@/hooks/use-auth';
 
-export default function LoginPage() {
+function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -90,3 +91,13 @@ export default function LoginPage() {
     </div>
   );
 }
+
+export default function LoginPageWithProtection() {
+  return (
+    <ProtectedRoutes>
+      <LoginPage />
+    </ProtectedRoutes>
+  )
+}
+
+    

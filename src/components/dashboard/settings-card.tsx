@@ -9,6 +9,7 @@ import { useToast } from "@/hooks/use-toast";
 import type { AppData, Nemesis } from "@/lib/types";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { CustomizeNemesisDialog } from "./customize-nemesis-dialog";
+import { useAuth } from "@/hooks/use-auth";
 
 type SettingsCardProps = {
   appData: AppData;
@@ -21,8 +22,13 @@ export function SettingsCard({ appData, onImport, onReset, onAddRival }: Setting
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
   const [isResetAlertOpen, setIsResetAlertOpen] = useState(false);
+  const { user } = useAuth();
 
   const handleExport = () => {
+    if (!user) {
+      toast({ variant: "destructive", title: "Login Required", description: "You must be logged in to export your personal data." });
+      return;
+    }
     try {
       const dataStr = JSON.stringify(appData, null, 2);
       const blob = new Blob([dataStr], { type: "application/json" });
@@ -41,6 +47,10 @@ export function SettingsCard({ appData, onImport, onReset, onAddRival }: Setting
   };
 
   const handleImportClick = () => {
+    if (!user) {
+      toast({ variant: "destructive", title: "Login Required", description: "You must be logged in to import data." });
+      return;
+    }
     fileInputRef.current?.click();
   };
 
@@ -69,6 +79,14 @@ export function SettingsCard({ appData, onImport, onReset, onAddRival }: Setting
     }
   };
 
+  const handleResetClick = () => {
+    if (!user) {
+      toast({ variant: "destructive", title: "Login Required", description: "Please log in to reset your personal progress." });
+      return;
+    }
+    setIsResetAlertOpen(true);
+  }
+
   return (
     <Card className="hover:bg-card/95 transition-colors">
       <CardHeader>
@@ -96,7 +114,7 @@ export function SettingsCard({ appData, onImport, onReset, onAddRival }: Setting
 
         <AlertDialog open={isResetAlertOpen} onOpenChange={setIsResetAlertOpen}>
           <AlertDialogTrigger asChild>
-            <Button variant="destructive" className="w-full">
+            <Button onClick={handleResetClick} variant="destructive" className="w-full">
               <RotateCcw className="mr-2 h-4 w-4" /> Reset Progress
             </Button>
           </AlertDialogTrigger>
@@ -127,3 +145,5 @@ export function SettingsCard({ appData, onImport, onReset, onAddRival }: Setting
     </Card>
   );
 }
+
+    

@@ -24,6 +24,7 @@ const AuthContext = createContext<AuthContextType>({
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const router = useRouter();
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
@@ -35,7 +36,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   const logout = () => {
-    signOut(auth).catch(error => console.error("Logout failed:", error));
+    signOut(auth)
+      .then(() => {
+        router.push('/');
+      })
+      .catch(error => console.error("Logout failed:", error));
   };
 
   const value = { user, loading, logout };
@@ -57,20 +62,16 @@ export const ProtectedRoutes = ({ children }: { children: ReactNode }) => {
     const router = useRouter();
     const pathname = usePathname();
 
-    const publicRoutes = ['/login', '/signup'];
+    const isAuthRoute = pathname === '/login' || pathname === '/signup';
 
     useEffect(() => {
-        if (!loading) {
-            if (!user && !publicRoutes.includes(pathname)) {
-                router.push('/login');
-            } else if (user && publicRoutes.includes(pathname)) {
-                router.push('/');
-            }
+        if (!loading && user && isAuthRoute) {
+            router.push('/');
         }
-    }, [user, loading, router, pathname]);
+    }, [user, loading, router, pathname, isAuthRoute]);
 
-    if (loading || (!user && !publicRoutes.includes(pathname)) || (user && publicRoutes.includes(pathname))) {
-        return (
+    if (loading) {
+         return (
             <div className="flex items-center justify-center min-h-screen bg-background">
                 <YinYang className="w-12 h-12 animate-pulse text-primary" />
             </div>
@@ -79,3 +80,5 @@ export const ProtectedRoutes = ({ children }: { children: ReactNode }) => {
     
     return <>{children}</>;
 };
+
+    

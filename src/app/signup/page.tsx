@@ -13,8 +13,9 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { YinYang } from '@/components/icons';
 import { Loader2 } from 'lucide-react';
+import { ProtectedRoutes } from '@/hooks/use-auth';
 
-export default function SignupPage() {
+function SignupPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -111,3 +112,14 @@ export default function SignupPage() {
     </div>
   );
 }
+
+
+export default function SignupPageWithProtection() {
+  return (
+    <ProtectedRoutes>
+      <SignupPage />
+    </ProtectedRoutes>
+  )
+}
+
+    

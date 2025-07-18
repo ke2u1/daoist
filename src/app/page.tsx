@@ -3,7 +3,7 @@
 
 import React, { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { useAuth, ProtectedRoutes } from "@/hooks/use-auth";
+import { useAuth } from "@/hooks/use-auth";
 
 import {
   Flame,
@@ -63,9 +63,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 
 const DATA_KEY_PREFIX = "essenceTrackerDataV2";
+const DEMO_DATA_KEY = "essenceTrackerDataV2_demo";
 
 function DashboardPage() {
-  const { user, loading, logout } = useAuth();
+  const { user, loading } = useAuth();
   const router = useRouter();
 
   const [appData, setAppData] = useState<AppData | null>(null);
@@ -75,8 +76,7 @@ function DashboardPage() {
   const { toast } = useToast();
 
   const getDataKey = useCallback(() => {
-    if (!user) return null;
-    return `${DATA_KEY_PREFIX}_${user.uid}`;
+    return user ? `${DATA_KEY_PREFIX}_${user.uid}` : DEMO_DATA_KEY;
   }, [user]);
 
   const toggleTheme = () => {
@@ -150,9 +150,7 @@ function DashboardPage() {
   }, [getDataKey]);
 
   useEffect(() => {
-    if (user) {
-      loadData();
-    }
+    loadData();
     const savedTheme = localStorage.getItem("theme") || "dark";
     setTheme(savedTheme);
   }, [user, loadData]);
@@ -601,6 +599,14 @@ function DashboardPage() {
     };
 
     const handleResetData = () => {
+      if (!user) {
+        toast({
+          variant: "destructive",
+          title: "Action requires login",
+          description: "Please sign in to reset your personal data."
+        });
+        return;
+      }
       const dataKey = getDataKey();
       if (dataKey) {
         localStorage.removeItem(dataKey);
@@ -713,10 +719,6 @@ function DashboardPage() {
             <Sun className="h-[1.2rem] w-[1.2rem] rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
             <Moon className="absolute h-[1.2rem] w-[1.2rem] rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
             <span className="sr-only">Toggle theme</span>
-          </Button>
-           <Button onClick={logout} variant="outline" size="icon" className="h-11 w-11 flex-shrink-0">
-              <LogOut className="h-[1.2rem] w-[1.2rem]" />
-              <span className="sr-only">Log Out</span>
           </Button>
         </div>
 
@@ -852,8 +854,8 @@ function DashboardPage() {
 
 export default function Home() {
   return (
-      <ProtectedRoutes>
-          <DashboardPage />
-      </ProtectedRoutes>
+    <DashboardPage />
   )
 }
+
+    
