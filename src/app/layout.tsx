@@ -1,8 +1,10 @@
+
 import type { Metadata } from "next";
 import { Inter, Source_Code_Pro } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/toaster";
 import { cn } from "@/lib/utils";
+import { AuthProvider } from "@/hooks/use-auth";
 
 const fontBody = Inter({
   subsets: ["latin"],
@@ -33,8 +35,10 @@ export default function RootLayout({
           fontCode.variable
         )}
       >
-        {children}
-        <Toaster />
+        <AuthProvider>
+          {children}
+          <Toaster />
+        </AuthProvider>
       </body>
     </html>
   );

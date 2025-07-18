@@ -2,6 +2,9 @@
 "use client";
 
 import React, { useState, useEffect, useCallback } from "react";
+import { useRouter } from "next/navigation";
+import { useAuth, ProtectedRoutes } from "@/hooks/use-auth";
+
 import {
   Flame,
   Star,
@@ -19,7 +22,9 @@ import {
   LayoutGrid,
   Users,
   BrainCircuit,
-  Swords
+  Swords,
+  LogOut,
+  History,
 } from "lucide-react";
 import { YinYang } from "@/components/icons";
 import type { AppData, Task, Tribulation, JournalEntry, Nemesis, Milestone } from "@/lib/types";
@@ -57,14 +62,22 @@ import { MindPalaceCard } from "@/components/dashboard/mind-palace-card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 
-const DATA_KEY = "essenceTrackerDataV2";
+const DATA_KEY_PREFIX = "essenceTrackerDataV2";
 
-export default function Home() {
+function DashboardPage() {
+  const { user, loading, logout } = useAuth();
+  const router = useRouter();
+
   const [appData, setAppData] = useState<AppData | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [theme, setTheme] = useState("dark");
   const [editingNemesis, setEditingNemesis] = useState<Nemesis | null>(null);
   const { toast } = useToast();
+
+  const getDataKey = useCallback(() => {
+    if (!user) return null;
+    return `${DATA_KEY_PREFIX}_${user.uid}`;
+  }, [user]);
 
   const toggleTheme = () => {
     setTheme((prevTheme) => (prevTheme === "dark" ? "light" : "dark"));
@@ -96,8 +109,11 @@ export default function Home() {
   }, [appData, searchQuery]);
 
   const loadData = useCallback(() => {
+    const dataKey = getDataKey();
+    if (!dataKey) return;
+
     try {
-      const savedData = localStorage.getItem(DATA_KEY);
+      const savedData = localStorage.getItem(dataKey);
       if (savedData) {
         const parsedData = JSON.parse(savedData);
         // Migration and validation
@@ -131,13 +147,15 @@ export default function Home() {
       console.error("Failed to load data, resetting to default.", error);
       setAppData(JSON.parse(JSON.stringify(DEFAULT_APP_DATA)));
     }
-  }, []);
+  }, [getDataKey]);
 
   useEffect(() => {
-    loadData();
+    if (user) {
+      loadData();
+    }
     const savedTheme = localStorage.getItem("theme") || "dark";
     setTheme(savedTheme);
-  }, [loadData]);
+  }, [user, loadData]);
   
   useEffect(() => {
     if (theme) {
@@ -148,15 +166,16 @@ export default function Home() {
   }, [theme]);
 
   useEffect(() => {
-    if (appData) {
+    const dataKey = getDataKey();
+    if (appData && dataKey) {
       try {
         const dataToSave = JSON.stringify(appData);
-        localStorage.setItem(DATA_KEY, dataToSave);
+        localStorage.setItem(dataKey, dataToSave);
       } catch (error) {
         console.error("Failed to save data.", error);
       }
     }
-  }, [appData]);
+  }, [appData, getDataKey]);
 
   const updateAppData = useCallback((updates: Partial<AppData>) => {
     setAppData((prev) => (prev ? { ...prev, ...updates } : null));
@@ -177,6 +196,12 @@ export default function Home() {
     setAppData(prevData => {
         if (!prevData) return null;
         const newMilestones = [newMilestone, ...prevData.milestones];
+        
+        // Keep milestones to a reasonable number
+        if(newMilestones.length > 100) {
+            newMilestones.splice(100);
+        }
+
         return { ...prevData, milestones: newMilestones };
     });
   }, []);
@@ -576,7 +601,10 @@ export default function Home() {
     };
 
     const handleResetData = () => {
-      localStorage.removeItem(DATA_KEY);
+      const dataKey = getDataKey();
+      if (dataKey) {
+        localStorage.removeItem(dataKey);
+      }
       setAppData(JSON.parse(JSON.stringify(DEFAULT_APP_DATA)));
       toast({
         title: "Progress Reset",
@@ -656,7 +684,7 @@ export default function Home() {
     }, []);
 
 
-  if (!appData) {
+  if (loading || !appData) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-background">
         <YinYang className="w-12 h-12 animate-pulse text-primary" />
@@ -685,6 +713,10 @@ export default function Home() {
             <Sun className="h-[1.2rem] w-[1.2rem] rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
             <Moon className="absolute h-[1.2rem] w-[1.2rem] rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
             <span className="sr-only">Toggle theme</span>
+          </Button>
+           <Button onClick={logout} variant="outline" size="icon" className="h-11 w-11 flex-shrink-0">
+              <LogOut className="h-[1.2rem] w-[1.2rem]" />
+              <span className="sr-only">Log Out</span>
           </Button>
         </div>
 
@@ -815,4 +847,13 @@ export default function Home() {
       </div>
     </main>
   );
+}
+
+
+export default function Home() {
+  return (
+      <ProtectedRoutes>
+          <DashboardPage />
+      </ProtectedRoutes>
+  )
 }
