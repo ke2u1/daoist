@@ -39,12 +39,21 @@ function LoginPage() {
       email,
       password,
     });
+
     if (error) {
-      toast({
-        variant: "destructive",
-        title: "Login Failed",
-        description: error.message || "An unexpected error occurred.",
-      });
+       if (error.message.includes("Email not confirmed")) {
+         toast({
+            variant: "destructive",
+            title: "Verification Required",
+            description: "Please check your email and click the confirmation link before logging in.",
+          });
+       } else {
+         toast({
+           variant: "destructive",
+           title: "Login Failed",
+           description: error.message || "An unexpected error occurred.",
+         });
+       }
     } else {
       toast({ title: "Login Successful", description: "Welcome back to your cultivation." });
       router.push('/');

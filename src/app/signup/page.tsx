@@ -57,7 +57,7 @@ function SignupPage() {
       });
     } else {
       toast({ title: "Account Created", description: "Check your email for a confirmation link to begin." });
-      router.push('/');
+      router.push('/login');
     }
     setIsLoading(false);
   };
