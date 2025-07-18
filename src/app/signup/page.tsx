@@ -4,8 +4,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { createUserWithEmailAndPassword } from 'firebase/auth';
-import { auth } from '@/lib/firebase';
+import { supabase } from '@/lib/supabase';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -13,7 +12,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { YinYang } from '@/components/icons';
 import { Loader2 } from 'lucide-react';
-import { ProtectedRoutes } from '@/hooks/use-auth';
+import { useAuth } from '@/hooks/use-auth';
 
 function SignupPage() {
   const [email, setEmail] = useState('');
@@ -22,9 +21,21 @@ function SignupPage() {
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
   const { toast } = useToast();
+  const { user, loading } = useAuth();
+  const isSupabaseConfigured = !!supabase;
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (!isSupabaseConfigured) {
+        toast({
+            variant: "destructive",
+            title: "Authentication Not Configured",
+            description: "Please configure Supabase credentials in your .env file.",
+        });
+        return;
+    }
+
     if (password !== confirmPassword) {
       toast({
         variant: "destructive",
@@ -34,21 +45,27 @@ function SignupPage() {
       return;
     }
     setIsLoading(true);
-    try {
-      await createUserWithEmailAndPassword(auth, email, password);
-      toast({ title: "Account Created", description: "Your journey begins now." });
-      router.push('/');
-    } catch (error: any) {
-      console.error(error);
+    const { error } = await supabase.auth.signUp({
+      email,
+      password,
+    });
+    if (error) {
       toast({
         variant: "destructive",
         title: "Signup Failed",
         description: error.message || "An unexpected error occurred.",
       });
-    } finally {
-      setIsLoading(false);
+    } else {
+      toast({ title: "Account Created", description: "Check your email for a confirmation link to begin." });
+      router.push('/');
     }
+    setIsLoading(false);
   };
+
+  if (!loading && user) {
+    router.push('/');
+    return null;
+  }
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-background p-4">
@@ -69,7 +86,7 @@ function SignupPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                disabled={isLoading}
+                disabled={isLoading || !isSupabaseConfigured}
               />
             </div>
             <div className="space-y-2">
@@ -81,7 +98,7 @@ function SignupPage() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
-                disabled={isLoading}
+                disabled={isLoading || !isSupabaseConfigured}
               />
             </div>
             <div className="space-y-2">
@@ -93,14 +110,17 @@ function SignupPage() {
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 required
-                disabled={isLoading}
+                disabled={isLoading || !isSupabaseConfigured}
               />
             </div>
-            <Button type="submit" className="w-full" disabled={isLoading}>
+            <Button type="submit" className="w-full" disabled={isLoading || !isSupabaseConfigured}>
                 {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 Sign Up
             </Button>
           </form>
+           {!isSupabaseConfigured && (
+                <p className="text-xs text-destructive text-center mt-4">Authentication is not configured. Please add your Supabase credentials to the .env file.</p>
+            )}
           <div className="mt-4 text-center text-sm">
             Already have an account?{' '}
             <Link href="/login" className="underline text-primary">
@@ -113,13 +133,6 @@ function SignupPage() {
   );
 }
 
-
-export default function SignupPageWithProtection() {
-  return (
-    <ProtectedRoutes>
-      <SignupPage />
-    </ProtectedRoutes>
-  )
+export default function SignupPageWithAuth() {
+    return <SignupPage />;
 }
-
-    

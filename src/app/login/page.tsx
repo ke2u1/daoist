@@ -4,8 +4,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { signInWithEmailAndPassword } from 'firebase/auth';
-import { auth } from '@/lib/firebase';
+import { supabase } from '@/lib/supabase';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -13,7 +12,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { YinYang } from '@/components/icons';
 import { Loader2 } from 'lucide-react';
-import { ProtectedRoutes } from '@/hooks/use-auth';
+import { useAuth } from '@/hooks/use-auth';
 
 function LoginPage() {
   const [email, setEmail] = useState('');
@@ -21,25 +20,43 @@ function LoginPage() {
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
   const { toast } = useToast();
+  const { user, loading } = useAuth();
+  const isSupabaseConfigured = !!supabase;
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!isSupabaseConfigured) {
+        toast({
+            variant: "destructive",
+            title: "Authentication Not Configured",
+            description: "Please configure Supabase credentials in your .env file.",
+        });
+        return;
+    }
+
     setIsLoading(true);
-    try {
-      await signInWithEmailAndPassword(auth, email, password);
-      toast({ title: "Login Successful", description: "Welcome back to your cultivation." });
-      router.push('/');
-    } catch (error: any) {
-      console.error(error);
+    const { error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+    if (error) {
       toast({
         variant: "destructive",
         title: "Login Failed",
         description: error.message || "An unexpected error occurred.",
       });
-    } finally {
-      setIsLoading(false);
+    } else {
+      toast({ title: "Login Successful", description: "Welcome back to your cultivation." });
+      router.push('/');
+      router.refresh(); // Force a refresh to update auth state across components
     }
+    setIsLoading(false);
   };
+
+  if (!loading && user) {
+      router.push('/');
+      return null;
+  }
 
   return (
     <div className="flex items-center justify-center min-h-screen bg-background p-4">
@@ -60,7 +77,7 @@ function LoginPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                disabled={isLoading}
+                disabled={isLoading || !isSupabaseConfigured}
               />
             </div>
             <div className="space-y-2">
@@ -72,14 +89,17 @@ function LoginPage() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 required
-                disabled={isLoading}
+                disabled={isLoading || !isSupabaseConfigured}
               />
             </div>
-            <Button type="submit" className="w-full" disabled={isLoading}>
+            <Button type="submit" className="w-full" disabled={isLoading || !isSupabaseConfigured}>
               {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Login
             </Button>
           </form>
+            {!isSupabaseConfigured && (
+                <p className="text-xs text-destructive text-center mt-4">Authentication is not configured. Please add your Supabase credentials to the .env file.</p>
+            )}
           <div className="mt-4 text-center text-sm">
             Don't have an account?{' '}
             <Link href="/signup" className="underline text-primary">
@@ -92,12 +112,6 @@ function LoginPage() {
   );
 }
 
-export default function LoginPageWithProtection() {
-  return (
-    <ProtectedRoutes>
-      <LoginPage />
-    </ProtectedRoutes>
-  )
+export default function LoginPageWithAuth() {
+    return <LoginPage />;
 }
-
-    

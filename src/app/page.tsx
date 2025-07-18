@@ -76,7 +76,7 @@ function DashboardPage() {
   const { toast } = useToast();
 
   const getDataKey = useCallback(() => {
-    return user ? `${DATA_KEY_PREFIX}_${user.uid}` : DEMO_DATA_KEY;
+    return user ? `${DATA_KEY_PREFIX}_${user.id}` : DEMO_DATA_KEY;
   }, [user]);
 
   const toggleTheme = () => {
@@ -854,8 +854,6 @@ function DashboardPage() {
 
 export default function Home() {
   return (
-    <DashboardPage />
+      <DashboardPage />
   )
 }
-
-    
