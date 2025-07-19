@@ -155,17 +155,27 @@ function DashboardPage() {
     }
   }, [theme]);
 
+  // This effect will run after appData is updated to handle side-effects like toasts
   useEffect(() => {
     const dataKey = getDataKey();
     if (appData && dataKey) {
-      try {
-        const dataToSave = JSON.stringify(appData);
-        localStorage.setItem(dataKey, dataToSave);
-      } catch (error) {
-        console.error("Failed to save data.", error);
-      }
+        try {
+            const dataToSave = JSON.stringify(appData);
+            localStorage.setItem(dataKey, dataToSave);
+        } catch (error) {
+            console.error("Failed to save data.", error);
+        }
+
+        // Handle side-effects that need to happen AFTER state update
+        const toastingQueue = appData.toastingQueue;
+        if (toastingQueue && toastingQueue.length > 0) {
+            toastingQueue.forEach(toastInfo => toast(toastInfo));
+            // Clear the queue after showing toasts
+            updateAppData({ ...appData, toastingQueue: [] });
+        }
     }
   }, [appData, getDataKey]);
+
 
   const updateAppData = useCallback((updates: Partial<AppData>) => {
     setAppData((prev) => (prev ? { ...prev, ...updates } : null));
@@ -196,44 +206,30 @@ function DashboardPage() {
     });
   }, []);
 
-  const checkAchievements = useCallback((currentData: AppData): AppData => {
-    const unlockedAchievements: string[] = [];
-    for (const key in ACHIEVEMENTS_CONFIG) {
-      if (
-        !currentData.stats.achievements[key] &&
-        ACHIEVEMENTS_CONFIG[key].condition(currentData)
-      ) {
-        currentData.stats.achievements[key] = true;
-        unlockedAchievements.push(ACHIEVEMENTS_CONFIG[key].name);
-      }
-    }
-    if (unlockedAchievements.length > 0) {
-      toast({
-        title: "🏆 Achievement Unlocked!",
-        description: unlockedAchievements.join(", "),
-      });
-    }
-    return currentData;
-  }, [toast]);
+    const checkAchievements = useCallback((currentData: AppData): { newData: AppData, unlockedAchievementNames: string[] } => {
+        const unlockedAchievementNames: string[] = [];
+        for (const key in ACHIEVEMENTS_CONFIG) {
+            if (
+                !currentData.stats.achievements[key] &&
+                ACHIEVEMENTS_CONFIG[key].condition(currentData)
+            ) {
+                currentData.stats.achievements[key] = true;
+                unlockedAchievementNames.push(ACHIEVEMENTS_CONFIG[key].name);
+            }
+        }
+        return { newData: currentData, unlockedAchievementNames };
+    }, []);
   
-  const checkRank = useCallback((currentData: AppData): AppData => {
-      const { totalPoints } = currentData.stats;
-      const currentRank = [...RANKS].reverse().find(r => totalPoints >= r.points);
-      if (currentRank && currentData.stats.rank !== currentRank.name) {
-          const oldRank = currentData.stats.rank;
-          currentData.stats.rank = currentRank.name;
-          toast({
-              title: "🔥 Rank Up!",
-              description: `You have achieved the rank of ${currentRank.name}.`,
-          });
-          addMilestone({
-              type: 'RANK_UP',
-              title: 'Advanced to ' + currentRank.name,
-              description: `You have surpassed the rank of ${oldRank} and achieved the status of ${currentRank.name}.`
-          });
-      }
-      return currentData;
-  }, [toast, addMilestone]);
+    const checkRank = useCallback((currentData: AppData): { newData: AppData, rankChanged: boolean, oldRank?: string } => {
+        const { totalPoints } = currentData.stats;
+        const currentRank = [...RANKS].reverse().find(r => totalPoints >= r.points);
+        if (currentRank && currentData.stats.rank !== currentRank.name) {
+            const oldRank = currentData.stats.rank;
+            currentData.stats.rank = currentRank.name;
+            return { newData: currentData, rankChanged: true, oldRank: oldRank };
+        }
+        return { newData: currentData, rankChanged: false };
+    }, []);
   
   const checkStreak = useCallback((currentData: AppData): AppData => {
       const today = new Date();
@@ -255,45 +251,69 @@ function DashboardPage() {
       return currentData;
   }, []);
 
-  const updateStatsOnCompletion = useCallback((isCompleting: boolean, task: Task, currentData: AppData): AppData => {
-    const points = task.actualPoints;
-    let newData = { ...currentData };
-    
-    const todayStr = new Date().toISOString().split('T')[0];
-    let todayProgress = newData.stats.dailyProgress.find(d => d.date === todayStr);
+    const updateStatsOnCompletion = useCallback((isCompleting: boolean, task: Task, currentData: AppData): AppData => {
+        const points = task.actualPoints;
+        let newData = { ...currentData };
+        
+        const todayStr = new Date().toISOString().split('T')[0];
+        let todayProgress = newData.stats.dailyProgress.find(d => d.date === todayStr);
 
-    if (isCompleting) {
-        newData.stats.totalPoints += points;
-        newData.rewardSystem.progress += points;
+        let newToasts = newData.toastingQueue || [];
 
-        if (todayProgress) {
-          todayProgress.points += points;
+        if (isCompleting) {
+            newData.stats.totalPoints += points;
+            newData.rewardSystem.progress += points;
+
+            if (todayProgress) {
+            todayProgress.points += points;
+            } else {
+            newData.stats.dailyProgress.push({ date: todayStr, points: points });
+            }
+            
+            newData.stats.allTimeTasksCompleted++;
+            newData = checkStreak(newData);
+
+            addMilestone({
+            type: 'TASK_COMPLETE',
+            title: 'Scheme Completed: ' + task.text,
+            description: `You have successfully completed a scheme and gained ${points} PE.`
+        });
+
         } else {
-          newData.stats.dailyProgress.push({ date: todayStr, points: points });
+            newData.stats.totalPoints -= points;
+            newData.rewardSystem.progress = Math.max(0, newData.rewardSystem.progress - points);
+            newData.stats.allTimeTasksCompleted = Math.max(0, newData.stats.allTimeTasksCompleted - 1);
+            if (todayProgress) {
+            todayProgress.points = Math.max(0, todayProgress.points - points);
+            }
         }
         
-        newData.stats.allTimeTasksCompleted++;
-        newData = checkStreak(newData);
-
-        addMilestone({
-          type: 'TASK_COMPLETE',
-          title: 'Scheme Completed: ' + task.text,
-          description: `You have successfully completed a scheme and gained ${points} PE.`
-      });
-
-    } else {
-        newData.stats.totalPoints -= points;
-        newData.rewardSystem.progress = Math.max(0, newData.rewardSystem.progress - points);
-        newData.stats.allTimeTasksCompleted = Math.max(0, newData.stats.allTimeTasksCompleted - 1);
-        if (todayProgress) {
-          todayProgress.points = Math.max(0, todayProgress.points - points);
+        const rankCheck = checkRank(newData);
+        newData = rankCheck.newData;
+        if (rankCheck.rankChanged) {
+            newToasts.push({
+                title: "🔥 Rank Up!",
+                description: `You have achieved the rank of ${newData.stats.rank}.`,
+            });
+             addMilestone({
+                type: 'RANK_UP',
+                title: 'Advanced to ' + newData.stats.rank,
+                description: `You have surpassed the rank of ${rankCheck.oldRank} and achieved the status of ${newData.stats.rank}.`
+            });
         }
-    }
-    
-    newData = checkRank(newData);
-    newData = checkAchievements(newData);
-    return newData;
-  }, [checkAchievements, checkRank, checkStreak, toast, addMilestone]);
+
+        const achievementCheck = checkAchievements(newData);
+        newData = achievementCheck.newData;
+        if (achievementCheck.unlockedAchievementNames.length > 0) {
+            newToasts.push({
+                title: "🏆 Achievement Unlocked!",
+                description: achievementCheck.unlockedAchievementNames.join(", "),
+            });
+        }
+
+        newData.toastingQueue = newToasts;
+        return newData;
+  }, [checkAchievements, checkRank, checkStreak, addMilestone]);
 
 
   const handleTaskAction = useCallback((action: 'add' | 'delete' | 'toggle' | 'update' | 'focus' | 'unfocus' | 'addSubtask' | 'addMultiple', payload: any) => {
@@ -383,7 +403,7 @@ function DashboardPage() {
                 if (newData.top3TaskIds.length < 3 && !newData.top3TaskIds.includes(payload.taskId)) {
                     newData.top3TaskIds.push(payload.taskId);
                 } else {
-                     toast({ variant: "destructive", title: "Focus list is full or scheme is already added." });
+                    newData.toastingQueue = [...(newData.toastingQueue || []), { variant: "destructive", title: "Focus list is full or scheme is already added." }];
                 }
                 break;
 
@@ -392,10 +412,18 @@ function DashboardPage() {
                 break;
         }
 
-        newData = checkAchievements(newData);
+        const achievementCheck = checkAchievements(newData);
+        newData = achievementCheck.newData;
+        if (achievementCheck.unlockedAchievementNames.length > 0) {
+            newData.toastingQueue = [...(newData.toastingQueue || []), {
+                title: "🏆 Achievement Unlocked!",
+                description: achievementCheck.unlockedAchievementNames.join(", "),
+            }];
+        }
+        
         return newData;
     });
-  }, [checkAchievements, updateStatsOnCompletion, toast]);
+  }, [checkAchievements, updateStatsOnCompletion]);
 
   const handleGenerateNewTribulation = useCallback(async () => {
     if (!appData) return;
@@ -419,11 +447,12 @@ function DashboardPage() {
         if (!prevData || !prevData.tribulation) return null;
         let newData = JSON.parse(JSON.stringify(prevData)) as AppData;
         const tribulation = newData.tribulation as Tribulation;
+        let newToasts = newData.toastingQueue || [];
         
         if (outcome === 'completed') {
             tribulation.completed = true;
             newData.stats.totalPoints += tribulation.reward;
-            toast({ title: "✨ Tribulation Survived!", description: `You have earned ${tribulation.reward} Primeval Essence!` });
+            newToasts.push({ title: "✨ Tribulation Survived!", description: `You have earned ${tribulation.reward} Primeval Essence!` });
             addMilestone({
                 type: 'TRIBULATION_COMPLETE',
                 title: 'Survived Tribulation: ' + tribulation.title,
@@ -432,7 +461,7 @@ function DashboardPage() {
         } else {
             tribulation.failed = true;
             newData.stats.totalPoints = Math.max(0, newData.stats.totalPoints - tribulation.penalty);
-            toast({ variant: "destructive", title: "💔 Tribulation Failed", description: `You have lost ${tribulation.penalty} Primeval Essence.` });
+            newToasts.push({ variant: "destructive", title: "💔 Tribulation Failed", description: `You have lost ${tribulation.penalty} Primeval Essence.` });
             addMilestone({
                 type: 'TRIBULATION_FAILED',
                 title: 'Failed Tribulation: ' + tribulation.title,
@@ -440,7 +469,21 @@ function DashboardPage() {
             });
         }
         
-        newData = checkRank(newData);
+        const rankCheck = checkRank(newData);
+        newData = rankCheck.newData;
+        if (rankCheck.rankChanged) {
+            newToasts.push({
+                title: "🔥 Rank Up!",
+                description: `You have achieved the rank of ${newData.stats.rank}.`,
+            });
+             addMilestone({
+                type: 'RANK_UP',
+                title: 'Advanced to ' + newData.stats.rank,
+                description: `You have surpassed the rank of ${rankCheck.oldRank} and achieved the status of ${newData.stats.rank}.`
+            });
+        }
+
+        newData.toastingQueue = newToasts;
         return newData;
     });
   };
@@ -470,15 +513,29 @@ function DashboardPage() {
           let newData = JSON.parse(JSON.stringify(prevData)) as AppData;
           newData.stats.totalPoints -= amount;
           newData.rewardSystem.progress = Math.max(0, newData.rewardSystem.progress - amount);
-          newData = checkRank(newData);
-          toast({
+          
+          let newToasts = newData.toastingQueue || [];
+
+          const rankCheck = checkRank(newData);
+          newData = rankCheck.newData;
+          if (rankCheck.rankChanged) {
+              newToasts.push({
+                  title: "🔥 Rank Down...",
+                  description: `You have fallen to the rank of ${newData.stats.rank}.`,
+                  variant: "destructive"
+              });
+          }
+          
+          newToasts.push({
               variant: "destructive",
               title: "Essence Wasted",
               description: `${amount} Primeval Essence deducted for: ${reason}.`,
           });
+          
+          newData.toastingQueue = newToasts;
           return newData;
       });
-  }, [checkRank, toast]);
+  }, [checkRank]);
 
   const handleRewardSystemUpdate = useCallback((newRewardSystem: Partial<AppData['rewardSystem']>) => {
       setAppData(prevData => {
@@ -494,29 +551,40 @@ function DashboardPage() {
   }, []);
 
   const handleClaimReward = useCallback(() => {
-    if (appData && appData.rewardSystem.progress >= appData.rewardSystem.goal) {
-      toast({
-        title: "🎉 Gu Refined!",
-        description: `You have claimed your reward.`,
-        className: "bg-accent text-accent-foreground border-accent",
+    setAppData(prevData => {
+      if (!prevData || prevData.rewardSystem.progress < prevData.rewardSystem.goal) return prevData;
+      
+      let newData = JSON.parse(JSON.stringify(prevData)) as AppData;
+      
+      addMilestone({
+          type: 'REWARD_CLAIMED',
+          title: 'Refined ' + (newData.rewardSystem.text || 'a Mysterious Gu'),
+          description: `You successfully refined a new Gu after accumulating ${newData.rewardSystem.goal} PE.`
       });
-      setAppData(prevData => {
-        if (!prevData) return null;
-        let newData = JSON.parse(JSON.stringify(prevData)) as AppData;
-        
-        addMilestone({
-            type: 'REWARD_CLAIMED',
-            title: 'Refined ' + (newData.rewardSystem.text || 'a Mysterious Gu'),
-            description: `You successfully refined a new Gu after accumulating ${newData.rewardSystem.goal} PE.`
-        });
-        
-        newData.rewardSystem.progress = 0;
-        newData.stats.rewardsClaimed++;
-        newData = checkAchievements(newData);
-        return newData;
+      
+      newData.rewardSystem.progress = 0;
+      newData.stats.rewardsClaimed++;
+
+      const achievementCheck = checkAchievements(newData);
+      newData = achievementCheck.newData;
+      
+      let newToasts = newData.toastingQueue || [];
+      newToasts.push({
+          title: "🎉 Gu Refined!",
+          description: `You have claimed your reward.`,
+          className: "bg-accent text-accent-foreground border-accent",
       });
-    }
-  }, [appData, toast, checkAchievements, addMilestone]);
+       if (achievementCheck.unlockedAchievementNames.length > 0) {
+            newToasts.push({
+                title: "🏆 Achievement Unlocked!",
+                description: achievementCheck.unlockedAchievementNames.join(", "),
+            });
+        }
+      newData.toastingQueue = newToasts;
+
+      return newData;
+    });
+  }, [addMilestone, checkAchievements]);
 
    const handleJournalUpdate = useCallback((newEntry: JournalEntry, analysis?: JournalEntry['analysis']) => {
         setAppData(prevData => {

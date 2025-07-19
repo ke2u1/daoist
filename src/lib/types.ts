@@ -1,6 +1,7 @@
 
 
 import { z } from 'zod';
+import type { ToastProps } from "@/components/ui/toast";
 
 export interface SubTask {
   id: number;
@@ -116,6 +117,7 @@ export interface AppData {
   nemesis: Nemesis[];
   milestones: Milestone[];
   mindPalace: MindPalace;
+  toastingQueue?: Omit<ToastProps, 'id'>[];
 }
 
 // AI Schema Types
