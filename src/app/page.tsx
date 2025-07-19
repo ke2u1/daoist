@@ -623,7 +623,7 @@ function DashboardPage() {
 
     const handleAddNemesis = useCallback((newNemesis: Nemesis) => {
       setAppData(prevData => {
-          if (!prevData) return null;
+          if (!prevData || !newNemesis) return null;
           addMilestone({
               type: 'NEMESIS_GENERATED',
               title: 'A Rival Emerges: ' + newNemesis.name,
@@ -678,7 +678,11 @@ function DashboardPage() {
                   objective: appData.objective,
                   shortTermGoal: appData.shortTermGoal,
               });
-              handleAddNemesis(newNemesis);
+              if (newNemesis) {
+                handleAddNemesis(newNemesis);
+              } else {
+                console.error("Failed to generate nemesis: action returned undefined.");
+              }
           } catch (error) {
               console.error("Failed to generate nemesis:", error);
           }
@@ -903,5 +907,7 @@ export default function Home() {
       <DashboardPage />
   )
 }
+
+    
 
     
