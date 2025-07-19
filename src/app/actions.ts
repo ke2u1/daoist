@@ -1,3 +1,4 @@
+
 'use server';
 
 import { refineTaskBenefits, type RefineTaskBenefitsInput, type RefineTaskBenefitsOutput } from "@/ai/flows/refine-task-benefits";
@@ -68,6 +69,7 @@ export async function generateNemesisAction(input: GenerateNemesisInput): Promis
         return result;
     } catch (error) {
         console.error("Error generating nemesis from AI.");
+        throw error;
     }
 }
 
