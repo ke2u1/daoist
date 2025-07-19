@@ -12,7 +12,7 @@ export default {
       fontFamily: {
         body: ['var(--font-body)', 'sans-serif'],
         headline: ['var(--font-body)', 'sans-serif'],
-        code: ['var(--font-code)', 'monospace'],
+        code: ['var(--font-body)', 'monospace'],
       },
       colors: {
         border: "hsl(var(--border))",

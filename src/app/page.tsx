@@ -51,7 +51,6 @@ import { cn } from "@/lib/utils";
 import { generateTribulationAction, generateNemesisAction, updateNemesisAction, customizeNemesisAction } from "@/app/actions";
 import { SearchResultsCard } from "@/components/dashboard/search-results-card";
 import { AdvisorCard } from "@/components/dashboard/advisor-card";
-import { DaoChart } from "@/components/dashboard/dao-chart";
 import { JournalCard } from "@/components/dashboard/journal-card";
 import { NemesisCard } from "@/components/dashboard/nemesis-card";
 import { CustomizeNemesisDialog } from "@/components/dashboard/customize-nemesis-dialog";
@@ -217,7 +216,7 @@ function DashboardPage() {
                 unlockedAchievementNames.push(ACHIEVEMENTS_CONFIG[key].name);
             }
         }
-        return { newData: currentData, unlockedAchievementNames };
+        return { newData: currentData, unlockedAchievementNames: unlockedAchievementNames };
     }, []);
   
     const checkRank = useCallback((currentData: AppData): { newData: AppData, rankChanged: boolean, oldRank?: string } => {
@@ -875,9 +874,8 @@ function DashboardPage() {
             </div>
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <AdvisorCard appData={appData} onUpdate={handleAdvisorUpdate} />
-              <DaoChart appData={appData} />
+              <JournalCard entries={appData.journalEntries} onUpdate={handleJournalUpdate} />
             </div>
-            <JournalCard entries={appData.journalEntries} onUpdate={handleJournalUpdate} />
           </TabsContent>
         </Tabs>
         

@@ -1,6 +1,6 @@
 
 import type { Metadata } from "next";
-import { Inter, Source_Code_Pro } from "next/font/google";
+import { Inter } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/toaster";
 import { cn } from "@/lib/utils";
@@ -9,11 +9,6 @@ import { AuthProvider } from "@/hooks/use-auth";
 const fontBody = Inter({
   subsets: ["latin"],
   variable: "--font-body",
-});
-
-const fontCode = Source_Code_Pro({
-  subsets: ["latin"],
-  variable: "--font-code",
 });
 
 export const metadata: Metadata = {
@@ -32,7 +27,6 @@ export default function RootLayout({
         className={cn(
           "font-body antialiased",
           fontBody.variable,
-          fontCode.variable
         )}
       >
         <AuthProvider>
