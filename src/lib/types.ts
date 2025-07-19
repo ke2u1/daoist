@@ -37,9 +37,6 @@ export interface Stats {
   lastCompletedDate: number | null;
   achievements: { [key: string]: boolean };
   dailyProgress: DailyProgress[];
-  dailyEssenceCapacity: number;
-  currentEssenceEarnedToday: number;
-  lastDateForEssence: string; // "YYYY-MM-DD"
 }
 
 export interface RewardSystem {
@@ -228,4 +225,5 @@ export const GenerateMindPalaceImageOutputSchema = z.object({
 });
 export type GenerateMindPalaceImageOutput = z.infer<typeof GenerateMindPalaceImageOutputSchema>;
 
+    
     

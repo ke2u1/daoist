@@ -54,7 +54,6 @@ import { AdvisorCard } from "@/components/dashboard/advisor-card";
 import { DaoChart } from "@/components/dashboard/dao-chart";
 import { JournalCard } from "@/components/dashboard/journal-card";
 import { NemesisCard } from "@/components/dashboard/nemesis-card";
-import { ApertureCard } from "@/components/dashboard/aperture-card";
 import { CustomizeNemesisDialog } from "@/components/dashboard/customize-nemesis-dialog";
 import { EditNemesisDialog } from "@/components/dashboard/edit-nemesis-dialog";
 import { HistoryCard } from "@/components/dashboard/history-card";
@@ -131,13 +130,6 @@ function DashboardPage() {
         if (!validatedData.milestones) validatedData.milestones = [];
         if (!validatedData.mindPalace) validatedData.mindPalace = { imageUrl: null, lastGenerated: null };
 
-
-        // Reset daily essence if it's a new day
-        const todayStr = new Date().toISOString().split('T')[0];
-        if (validatedData.stats.lastDateForEssence !== todayStr) {
-            validatedData.stats.currentEssenceEarnedToday = 0;
-            validatedData.stats.lastDateForEssence = todayStr;
-        }
 
         setAppData(validatedData);
       } else {
@@ -271,25 +263,13 @@ function DashboardPage() {
     let todayProgress = newData.stats.dailyProgress.find(d => d.date === todayStr);
 
     if (isCompleting) {
-        const essenceToEarn = Math.min(points, newData.stats.dailyEssenceCapacity - newData.stats.currentEssenceEarnedToday);
-        if (essenceToEarn < points) {
-            toast({
-                title: "Aperture Limit Reached",
-                description: `You can only absorb ${essenceToEarn} more Essence today. Complete this scheme tomorrow for full benefits.`,
-                variant: "destructive"
-            });
-        }
-        
-        if (essenceToEarn > 0) {
-            newData.stats.totalPoints += essenceToEarn;
-            newData.stats.currentEssenceEarnedToday += essenceToEarn;
-            newData.rewardSystem.progress += essenceToEarn;
+        newData.stats.totalPoints += points;
+        newData.rewardSystem.progress += points;
 
-            if (todayProgress) {
-              todayProgress.points += essenceToEarn;
-            } else {
-              newData.stats.dailyProgress.push({ date: todayStr, points: essenceToEarn });
-            }
+        if (todayProgress) {
+          todayProgress.points += points;
+        } else {
+          newData.stats.dailyProgress.push({ date: todayStr, points: points });
         }
         
         newData.stats.allTimeTasksCompleted++;
@@ -298,11 +278,10 @@ function DashboardPage() {
         addMilestone({
           type: 'TASK_COMPLETE',
           title: 'Scheme Completed: ' + task.text,
-          description: `You have successfully completed a scheme and gained ${essenceToEarn} PE.`
+          description: `You have successfully completed a scheme and gained ${points} PE.`
       });
 
     } else {
-        // Note: Un-completing doesn't refund essence to the daily capacity to prevent exploitation.
         newData.stats.totalPoints -= points;
         newData.rewardSystem.progress = Math.max(0, newData.rewardSystem.progress - points);
         newData.stats.allTimeTasksCompleted = Math.max(0, newData.stats.allTimeTasksCompleted - 1);
@@ -788,9 +767,8 @@ function DashboardPage() {
               allTasks={appData.weeklyTasks}
               onTaskAction={handleTaskAction}
             />
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               <ProgressDashboard stats={appData.stats} onWasteEssence={handleWasteEssence} />
-              <ApertureCard stats={appData.stats} />
               <RewardCard 
                   rewardSystem={appData.rewardSystem} 
                   onUpdate={handleRewardSystemUpdate} 
@@ -857,3 +835,5 @@ export default function Home() {
       <DashboardPage />
   )
 }
+
+    

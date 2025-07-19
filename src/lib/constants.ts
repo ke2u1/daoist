@@ -135,9 +135,6 @@ export const DEFAULT_APP_DATA: AppData = {
     lastCompletedDate: null,
     achievements: {},
     dailyProgress: [],
-    dailyEssenceCapacity: 1000,
-    currentEssenceEarnedToday: 0,
-    lastDateForEssence: new Date().toISOString().split('T')[0],
   },
   rewardSystem: { text: "", goal: 50, progress: 0 },
   tribulation: null,
@@ -150,3 +147,5 @@ export const DEFAULT_APP_DATA: AppData = {
       lastGenerated: null,
   }
 };
+
+    
